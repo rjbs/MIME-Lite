@@ -42,7 +42,7 @@ $T->ok(($str =~ m{Hello\nWorld\n}),
 $me = MIME::Lite->build(Type => 'text/plain',
 			Path => "./testin/hello");
 $str = $me->as_string;
-$T->ok(($str =~ m{Hello\nWorld\n}),
+$T->ok(($str =~ m{Hello\r?\nWorld\r?\n}),
        $from,
        "Data file");
 
