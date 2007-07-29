@@ -28,21 +28,18 @@ if (prompt("Add prereqs?",'Yes')=~/y/i) {
             );
 }
 
-
-
-
-
 # Write the Makefile:
 WriteMakefile(
-	      NAME         => 'MIME::Lite',
-	      VERSION_FROM => "lib/MIME/Lite.pm",
-	      DISTNAME     => "MIME-Lite",
-	      EXE_FILES    => [@EXES],
-	      'dist'       => {
-		  #PREOP    => 'cvu_perl_preop -m MIME::Lite -f',#demerphq
-		  COMPRESS => 'gzip',
-		  SUFFIX   => 'gz',
-	      },
-	      'PREREQ_PM'    => \%prereq,
-	      );
+  NAME         => 'MIME::Lite',
+  (eval { ExtUtils::MakeMaker->VERSION(6.21) } ? (LICENSE => 'perl') : ()),
+  VERSION_FROM => "lib/MIME/Lite.pm",
+  DISTNAME     => "MIME-Lite",
+  EXE_FILES    => [@EXES],
+  'dist'       => {
+    #PREOP    => 'cvu_perl_preop -m MIME::Lite -f',#demerphq
+    COMPRESS => 'gzip',
+    SUFFIX   => 'gz',
+  },
+  'PREREQ_PM'    => \%prereq,
+);
 
