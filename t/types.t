@@ -16,7 +16,7 @@ if  ($::SKIP) {
   warn "#\n#Interaction with MIME::Types has not been tested\n#as it doesn't seem to be present.\n";
   $T->ok(1,"MIME::Types not available.");
 } elsif (eval { MIME::Types->VERSION(1.004) }) {
-    warn "#\n#Testing MIME::Types interaction\n";
+    # warn "#\n#Testing MIME::Types interaction\n";
     my $msg;
     $msg = MIME::Lite->new(
                      From     =>'me@myhost.com',
