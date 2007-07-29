@@ -2,22 +2,33 @@
 
 =over 4
 
+=item Version 3.02
+
+Optimized code for speedup of creation of two-part messages. The internal
+structure of the object has changes, but that won't matter if you were
+using the published interface.  (Sam Tregar)
+
+Removed the "advanced features", ie auto-fallback delivery, from
+send_by_smtp. They didn't belong there in the first place.
+
 =item Version 3.01_04 (2004/05/05)
 
 Reworked the new send_by_smtp stuff. Documentation modifications.
 
 =item Version 3.01_02 (2003/08/28)
 
-Well, it seems 3.01_01 failed tests on Win32 due to me accidentally changing the line ending
-format to DOSish. Also the way that email extraction for SMTP with or without Mail::Address
-was different (from 2.117 even).  So ive fixed that.
+Well, it seems 3.01_01 failed tests on Win32 due to me accidentally
+changing the line ending format to DOSish. Also the way that email
+extraction for SMTP with or without Mail::Address was different (from
+2.117 even).  So ive fixed that.
 
-Anybody depending on the undocumented extract_addrs() is in for a suprise. I suggest you look
-at using Mail::Address.
+Anybody depending on the undocumented extract_addrs() is in for a suprise.
+I suggest you look at using Mail::Address.
 
 =item Version 3.01_01 (2003/04/25 - 2003/08/21)
 
-(This version is a test release, if its ok then I'll re-release it as 3.02)
+(This version is a test release, if its ok then I'll re-release it as
+3.02)
 
 Patched the pod to use correct entities Thanks to Ed Avis  for the patch.
 Added better support for funky names in the from field when sending via SMTP, thanks to

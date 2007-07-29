@@ -26,6 +26,15 @@ if  ($::SKIP) {
                      Data     =>"How's it goin', eh?"
                      );
 
+    # this test requires output in a particular order, so specify it
+    $msg->field_order(qw(Content-Transfer-Encoding
+                         Content-Type
+                         MIME-Version
+                         From
+                         To
+                         Cc
+                         Subject));
+
     $msg->attach(
                Type     => 'AUTO',
                Path     => "./testin/test.html",

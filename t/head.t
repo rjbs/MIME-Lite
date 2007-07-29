@@ -74,6 +74,7 @@ $T->ok_eq($me->attr('content-type.charset'),
 	  "attr: replace of charset worked");
 #
 my ($ct) = map {($_->[0] eq 'content-type') ? $_->[1] : ()} @{$me->fields};
+
 $T->ok_eq($ct,
 	  'text/plain; charset="US-ASCII"',
 	  "attr: replace of charset worked on whole line");
