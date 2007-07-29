@@ -2,6 +2,10 @@
 
 =over 4
 
+=item Version 3.01_04 (2004/05/05)
+
+Reworked the new send_by_smtp stuff. Documentation modifications.
+
 =item Version 3.01_02 (2003/08/28)
 
 Well, it seems 3.01_01 failed tests on Win32 due to me accidentally changing the line ending

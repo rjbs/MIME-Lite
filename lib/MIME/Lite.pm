@@ -5,44 +5,47 @@ package MIME::Lite;
 
 MIME::Lite - low-calorie MIME generator
 
-
 =head1 SYNOPSIS
 
+Create and send using the default send method for your OS a single-part message:
+
     use MIME::Lite;
-
-Create a single-part message:
-
     ### Create a new single-part message, to send a GIF file:
     $msg = MIME::Lite->new(
-                 From     =>'me@myhost.com',
-                 To       =>'you@yourhost.com',
-                 Cc       =>'some@other.com, some@more.com',
-                 Subject  =>'Helloooooo, nurse!',
-                 Type     =>'image/gif',
-                 Encoding =>'base64',
-                 Path     =>'hellonurse.gif'
-         );
+        From     =>'me@myhost.com',
+        To       =>'you@yourhost.com',
+        Cc       =>'some@other.com, some@more.com',
+        Subject  =>'Helloooooo, nurse!',
+        Type     =>'image/gif',
+        Encoding =>'base64',
+        Path     =>'hellonurse.gif'
+    );
+    $msg->send; # send via default
 
-Create a multipart message (i.e., one with attachments):
+Create a multipart message (i.e., one with attachments) and send it SMTP
 
     ### Create a new multipart message:
     $msg = MIME::Lite->new(
-                 From    =>'me@myhost.com',
-                 To      =>'you@yourhost.com',
-                 Cc      =>'some@other.com, some@more.com',
-                 Subject =>'A message with 2 parts...',
-                 Type    =>'multipart/mixed'
-         );
+        From    =>'me@myhost.com',
+        To      =>'you@yourhost.com',
+        Cc      =>'some@other.com, some@more.com',
+        Subject =>'A message with 2 parts...',
+        Type    =>'multipart/mixed'
+    );
 
     ### Add parts (each "attach" has same arguments as "new"):
-    $msg->attach(Type     =>'TEXT',
-                 Data     =>"Here's the GIF file you wanted"
-         );
-    $msg->attach(Type     =>'image/gif',
-                 Path     =>'aaa000123.gif',
-                 Filename =>'logo.gif',
-         Disposition => 'attachment'
-         );
+    $msg->attach(
+        Type     =>'TEXT',
+        Data     =>"Here's the GIF file you wanted"
+    );
+    $msg->attach(
+        Type     =>'image/gif',
+        Path     =>'aaa000123.gif',
+        Filename =>'logo.gif',
+        Disposition => 'attachment'
+    );
+    ### use Net:SMTP to do the sending
+    $msg->send('smtp','some.host', Debug=>1 );
 
 Output a message:
 
@@ -52,13 +55,16 @@ Output a message:
     ### Print to a filehandle (say, a "sendmail" stream):
     $msg->print(\*SENDMAIL);
 
-
 Send a message:
 
     ### Send in the "best" way (the default is to use "sendmail"):
     $msg->send;
+    ### Send a specific way:
+    $msg->send('type',@args);
 
+Specify default send method:
 
+    MIME::Lite->send('smtp','some.host',Debug=>0);
 
 =head1 DESCRIPTION
 
@@ -69,7 +75,7 @@ MIME::Lite is intended as a simple, standalone module for generating
 (not parsing!) MIME messages... specifically, it allows you to
 output a simple, decent single- or multi-part message with text or binary
 attachments.  It does not require that you have the Mail:: or MIME::
-modules installed.
+modules installed, but will work with them if they are.
 
 You can specify each message part as either the literal data itself (in
 a scalar or array), or as a string which can be given to open() to get
@@ -78,59 +84,56 @@ a readable filehandle (e.g., "<filename" or "somecommand|").
 You don't need to worry about encoding your message data:
 this module will do that for you.  It handles the 5 standard MIME encodings.
 
-If you need more sophisticated behavior, please get the MIME-tools
-package instead.  I will be more likely to add stuff to that toolkit
-over this one.
-
-
 =head1 EXAMPLES
 
 =head2 Create a simple message containing just text
 
     $msg = MIME::Lite->new(
-                 From     =>'me@myhost.com',
-                 To       =>'you@yourhost.com',
-                 Cc       =>'some@other.com, some@more.com',
-                 Subject  =>'Helloooooo, nurse!',
-                 Data     =>"How's it goin', eh?"
-         );
+        From     =>'me@myhost.com',
+        To       =>'you@yourhost.com',
+        Cc       =>'some@other.com, some@more.com',
+        Subject  =>'Helloooooo, nurse!',
+        Data     =>"How's it goin', eh?"
+    );
 
 =head2 Create a simple message containing just an image
 
     $msg = MIME::Lite->new(
-                 From     =>'me@myhost.com',
-                 To       =>'you@yourhost.com',
-                 Cc       =>'some@other.com, some@more.com',
-                 Subject  =>'Helloooooo, nurse!',
-                 Type     =>'image/gif',
-                 Encoding =>'base64',
-                 Path     =>'hellonurse.gif'
-         );
+        From     =>'me@myhost.com',
+        To       =>'you@yourhost.com',
+        Cc       =>'some@other.com, some@more.com',
+        Subject  =>'Helloooooo, nurse!',
+        Type     =>'image/gif',
+        Encoding =>'base64',
+        Path     =>'hellonurse.gif'
+    );
 
 
 =head2 Create a multipart message
 
     ### Create the multipart "container":
     $msg = MIME::Lite->new(
-                 From    =>'me@myhost.com',
-                 To      =>'you@yourhost.com',
-                 Cc      =>'some@other.com, some@more.com',
-                 Subject =>'A message with 2 parts...',
-                 Type    =>'multipart/mixed'
-         );
+        From    =>'me@myhost.com',
+        To      =>'you@yourhost.com',
+        Cc      =>'some@other.com, some@more.com',
+        Subject =>'A message with 2 parts...',
+        Type    =>'multipart/mixed'
+    );
 
     ### Add the text message part:
     ### (Note that "attach" has same arguments as "new"):
-    $msg->attach(Type     =>'TEXT',
-                 Data     =>"Here's the GIF file you wanted"
-         );
+    $msg->attach(
+        Type     =>'TEXT',
+        Data     =>"Here's the GIF file you wanted"
+    );
 
     ### Add the image part:
-    $msg->attach(Type     =>'image/gif',
-                 Path     =>'aaa000123.gif',
-                 Filename =>'logo.gif',
-         Disposition => 'attachment'
-         );
+    $msg->attach(
+        Type        =>'image/gif',
+        Path        =>'aaa000123.gif',
+        Filename    =>'logo.gif',
+        Disposition => 'attachment'
+    );
 
 
 =head2 Attach a GIF to a text message
@@ -140,28 +143,29 @@ This will create a multipart message exactly as above, but using the
 
     ### Start with a simple text message:
     $msg = MIME::Lite->new(
-                 From    =>'me@myhost.com',
-                 To      =>'you@yourhost.com',
-                 Cc      =>'some@other.com, some@more.com',
-                 Subject =>'A message with 2 parts...',
-                 Type    =>'TEXT',
-                 Data    =>"Here's the GIF file you wanted"
-                 );
+        From    =>'me@myhost.com',
+        To      =>'you@yourhost.com',
+        Cc      =>'some@other.com, some@more.com',
+        Subject =>'A message with 2 parts...',
+        Type    =>'TEXT',
+        Data    =>"Here's the GIF file you wanted"
+    );
 
     ### Attach a part... the make the message a multipart automatically:
-    $msg->attach(Type     =>'image/gif',
-                 Path     =>'aaa000123.gif',
-                 Filename =>'logo.gif'
-                 );
+    $msg->attach(
+        Type     =>'image/gif',
+        Path     =>'aaa000123.gif',
+        Filename =>'logo.gif'
+    );
 
 
 =head2 Attach a pre-prepared part to a message
 
     ### Create a standalone part:
     $part = MIME::Lite->new(
-                 Type     =>'text/html',
-                 Data     =>'<H1>Hello</H1>',
-                 );
+        Type     =>'text/html',
+        Data     =>'<H1>Hello</H1>',
+    );
     $part->attr('content-type.charset' => 'UTF8');
     $part->add('X-Comment' => 'A message for you');
 
@@ -202,20 +206,24 @@ This will create a multipart message exactly as above, but using the
 =head2 Send an HTML document... with images included!
 
     $msg = MIME::Lite->new(
-                 To      =>'you@yourhost.com',
-                 Subject =>'HTML with in-line images!',
-                 Type    =>'multipart/related'
-                 );
-    $msg->attach(Type => 'text/html',
-                 Data => qq{ <body>
-                             Here's <i>my</i> image:
-                             <img src="cid:myimage.gif">
-                             </body> }
-                 );
-    $msg->attach(Type => 'image/gif',
-                 Id   => 'myimage.gif',
-                 Path => '/path/to/somefile.gif',
-                 );
+         To      =>'you@yourhost.com',
+         Subject =>'HTML with in-line images!',
+         Type    =>'multipart/related'
+    );
+    $msg->attach(
+        Type => 'text/html',
+        Data => qq{
+            <body>
+                Here's <i>my</i> image:
+                <img src="cid:myimage.gif">
+            </body>
+        },
+    );
+    $msg->attach(
+        Type => 'image/gif',
+        Id   => 'myimage.gif',
+        Path => '/path/to/somefile.gif',
+    );
     $msg->send();
 
 
@@ -228,11 +236,6 @@ This will create a multipart message exactly as above, but using the
 
     ### Now this will do the right thing:
     $msg->send;         ### will now use Net::SMTP as shown above
-
-
-
-
-
 
 =head1 PUBLIC INTERFACE
 
@@ -325,15 +328,15 @@ use FileHandle;
 
 use strict;
 use vars qw(
-    $AUTO_CC
-    $AUTO_CONTENT_TYPE
-    $AUTO_ENCODE
-    $AUTO_VERIFY
-    $PARANOID
-    $QUIET
-    $VANILLA
-    $VERSION
-    $DEBUG
+  $AUTO_CC
+  $AUTO_CONTENT_TYPE
+  $AUTO_ENCODE
+  $AUTO_VERIFY
+  $PARANOID
+  $QUIET
+  $VANILLA
+  $VERSION
+  $DEBUG
 );
 
 
@@ -341,7 +344,8 @@ use vars qw(
 #==============================
 #
 # GLOBALS, EXTERNAL/CONFIGURATION...
-$VERSION = "3.01_03";
+$VERSION = "3.01_04";
+$VERSION = eval $VERSION;
 
 ### Automatically interpret CC/BCC for SMTP:
 $AUTO_CC = 1;
@@ -364,25 +368,28 @@ $QUIET = undef;
 ### Unsupported (for tester use): don't qualify boundary with time/pid:
 $VANILLA = 0;
 
-$MIME::Lite::DEBUG=0;
+$MIME::Lite::DEBUG = 0;
 
 #==============================
 #==============================
 #
 # GLOBALS, INTERNAL...
 
-### Find sendmail:
-my $SENDMAIL = "/usr/lib/sendmail";
-( -x $SENDMAIL ) or ( $SENDMAIL = "/usr/sbin/sendmail" );
-( -x $SENDMAIL ) or ( $SENDMAIL = "sendmail" );
+my $Sender;
+my $SENDMAIL;
+
+if ( $^O =~ /win32/i ) {
+    $Sender = "smtp";
+} else {
+    ### Find sendmail:
+    $Sender   = "sendmail";
+    $SENDMAIL = "/usr/lib/sendmail";
+    ( -x $SENDMAIL ) or ( $SENDMAIL = "/usr/sbin/sendmail" );
+    ( -x $SENDMAIL ) or ( $SENDMAIL = "sendmail" );
+}
 
 ### Our sending facilities:
-my $Sender     = $^O=~/win32/i ? "smtp" : "sendmail";
-my %SenderArgs = (
-    "sendmail" => ["$SENDMAIL -t -oi -oem"],
-    "smtp"     => [],
-    "sub"      => [],
-);
+my %SenderArgs = ( "sendmail" => ["$SENDMAIL -t -oi -oem"], "smtp" => [], "sub" => [], );
 
 ### Boundary counter:
 my $BCount = 0;
@@ -390,13 +397,13 @@ my $BCount = 0;
 ### Known Mail/MIME fields... these, plus some general forms like
 ### "x-*", are recognized by build():
 my %KnownField = map { $_ => 1 }
-    qw(
-    bcc         cc          comments      date          encrypted
-    from        keywords    message-id    mime-version  organization
-    received    references  reply-to      return-path   sender
-    subject     to
+  qw(
+  bcc         cc          comments      date          encrypted
+  from        keywords    message-id    mime-version  organization
+  received    references  reply-to      return-path   sender
+  subject     to
 
-    approved
+  approved
 );
 
 ### What external packages do we use for encoding?
@@ -479,37 +486,39 @@ sub is_mime_field {
 #
 # Unless paranoid, we try to load the real code before supplying our own.
 BEGIN {
-	my $ATOM      = '[^ \000-\037()<>@,;:\134"\056\133\135]+';
-	my $QSTR      = '".*?"';
-	my $WORD      = '(?:' . $QSTR . '|' . $ATOM . ')';
-	my $DOMAIN    = '(?:' . $ATOM . '(?:' . '\\.' . $ATOM . ')*' . ')';
-	my $LOCALPART = '(?:' . $WORD . '(?:' . '\\.' . $WORD . ')*' . ')';
-	my $ADDR      = '(?:' . $LOCALPART . '@' . $DOMAIN . ')';
-	my $PHRASE    = '(?:' . $WORD . ')+';
-	my $SEP       = "(?:^\\s*|\\s*,\\s*)";                                ### before elems in a list
+    my $ATOM      = '[^ \000-\037()<>@,;:\134"\056\133\135]+';
+    my $QSTR      = '".*?"';
+    my $WORD      = '(?:' . $QSTR . '|' . $ATOM . ')';
+    my $DOMAIN    = '(?:' . $ATOM . '(?:' . '\\.' . $ATOM . ')*' . ')';
+    my $LOCALPART = '(?:' . $WORD . '(?:' . '\\.' . $WORD . ')*' . ')';
+    my $ADDR      = '(?:' . $LOCALPART . '@' . $DOMAIN . ')';
+    my $PHRASE    = '(?:' . $WORD . ')+';
+    my $SEP       = "(?:^\\s*|\\s*,\\s*)";                                ### before elems in a list
 
-	sub my_extract_full_addrs {
-	    my $str = shift;
-	    my @addrs;
-	    $str =~ s/\s/ /g;                                                 ### collapse whitespace
+    sub my_extract_full_addrs {
+        my $str = shift;
+        my @addrs;
+        $str =~ s/\s/ /g;                                                 ### collapse whitespace
 
-	    pos($str) = 0;
-	    while ( $str !~ m{\G\s*\Z}gco ) {
-			### print STDERR "TACKLING: ".substr($str, pos($str))."\n";
-			if ( $str =~ m{\G$SEP($PHRASE)\s*<\s*($ADDR)\s*>}gco ) {
-				push @addrs, "$1 <$2>" }
-			elsif ( $str =~ m{\G$SEP($ADDR)}gco or $str =~ m{\G$SEP($ATOM)}gco ) {
-				push @addrs, $1
-			}else {
-				my $problem = substr( $str, pos($str) );
-				die "can't extract address at <$problem> in <$str>\n";
-			}
-	    }
-	    return @addrs;
-	}
-	sub my_extract_only_addrs {
-			return map { /<([^>]+)>/ ? $1 : $_ } my_extract_full_addrs(@_);
-	}
+        pos($str) = 0;
+        while ( $str !~ m{\G\s*\Z}gco ) {
+            ### print STDERR "TACKLING: ".substr($str, pos($str))."\n";
+            if ( $str =~ m{\G$SEP($PHRASE)\s*<\s*($ADDR)\s*>}gco ) {
+                push @addrs, "$1 <$2>";
+            } elsif ( $str =~ m{\G$SEP($ADDR)}gco or $str =~ m{\G$SEP($ATOM)}gco ) {
+                push @addrs, $1;
+            } else {
+                my $problem = substr( $str, pos($str) );
+                die "can't extract address at <$problem> in <$str>\n";
+            }
+        }
+        return wantarray ? @addrs : $addrs[0];
+    }
+
+    sub my_extract_only_addrs {
+        my @ret = map { /<([^>]+)>/ ? $1 : $_ } my_extract_full_addrs(@_);
+        return wantarray ? @ret : $ret[0];
+    }
 }
 #------------------------------
 
@@ -517,12 +526,14 @@ BEGIN {
 if ( !$PARANOID and eval "require Mail::Address" ) {
     push @Uses, "A$Mail::Address::VERSION";
     eval q{
-		sub extract_full_addrs {
-	    	return map { $_->format } Mail::Address->parse($_[0]);
-		}
-		sub extract_only_addrs {
-			return map { $_->address } Mail::Address->parse($_[0]);
-		}
+                sub extract_full_addrs {
+                    my @ret=map { $_->format } Mail::Address->parse($_[0]);
+                    return wantarray ? @ret : $ret[0]
+                }
+                sub extract_only_addrs {
+                    my @ret=map { $_->address } Mail::Address->parse($_[0]);
+                    return wantarray ? @ret : $ret[0]
+                }
     };    ### q
 } else {
     eval q{
@@ -659,10 +670,9 @@ sub new {
     my $class = shift;
 
     ### Create basic object:
-    my $self = {
-        Attrs  => {},    ### MIME attributes
-        Header => [],    ### explicit message headers
-        Parts  => [],    ### array of parts
+    my $self = { Attrs  => {},    ### MIME attributes
+                 Header => [],    ### explicit message headers
+                 Parts  => [],    ### array of parts
     };
     bless $self, $class;
 
@@ -722,9 +732,7 @@ sub attach {
     my $self = shift;
 
     ### Create new part, if necessary:
-    my $part1 = (
-        ( @_ == 1 ) ? shift : ref($self)->new( Top => 0, @_)
-    );
+    my $part1 = ( ( @_ == 1 ) ? shift: ref($self)->new( Top => 0, @_ ) );
 
     ### Do the "attach-to-singlepart" hack:
     if ( $self->attr('content-type') !~ m{^(multipart|message)/}i ) {
@@ -911,37 +919,42 @@ is of course 2000 bytes, so it's probably more of an "icon" than a "picture",
 but I digress...), here are some examples:
 
     $msg = MIME::Lite->build(
-               From     => 'yelling@inter.com',
-               To       => 'stocking@fish.net',
-               Subject  => "Hi there!",
-               Type     => 'TEXT',
-               Encoding => '7bit',
-               Data     => "Just a quick note to say hi!");
+        From     => 'yelling@inter.com',
+        To       => 'stocking@fish.net',
+        Subject  => "Hi there!",
+        Type     => 'TEXT',
+        Encoding => '7bit',
+        Data     => "Just a quick note to say hi!"
+    );
 
     $msg = MIME::Lite->build(
-               From     => 'dorothy@emerald-city.oz',
-               To       => 'gesundheit@edu.edu.edu',
-               Subject  => "A gif for U"
-               Type     => 'image/gif',
-               Path     => "/home/httpd/logo.gif");
+        From     => 'dorothy@emerald-city.oz',
+        To       => 'gesundheit@edu.edu.edu',
+        Subject  => "A gif for U"
+        Type     => 'image/gif',
+        Path     => "/home/httpd/logo.gif"
+    );
 
     $msg = MIME::Lite->build(
-               From     => 'laughing@all.of.us',
-               To       => 'scarlett@fiddle.dee.de',
-               Subject  => "A gzipp'ed tar file",
-               Type     => 'x-gzip',
-               Path     => "gzip < /usr/inc/somefile.tar |",
-               ReadNow  => 1,
-               Filename => "somefile.tgz");
+        From     => 'laughing@all.of.us',
+        To       => 'scarlett@fiddle.dee.de',
+        Subject  => "A gzipp'ed tar file",
+        Type     => 'x-gzip',
+        Path     => "gzip < /usr/inc/somefile.tar |",
+        ReadNow  => 1,
+        Filename => "somefile.tgz"
+    );
 
 To show you what's really going on, that last example could also
 have been written:
 
     $msg = new MIME::Lite;
-    $msg->build(Type     => 'x-gzip',
-                Path     => "gzip < /usr/inc/somefile.tar |",
-                ReadNow  => 1,
-                Filename => "somefile.tgz");
+    $msg->build(
+        Type     => 'x-gzip',
+        Path     => "gzip < /usr/inc/somefile.tar |",
+        ReadNow  => 1,
+        Filename => "somefile.tgz"
+    );
     $msg->add(From    => "laughing@all.of.us");
     $msg->add(To      => "scarlett@fiddle.dee.de");
     $msg->add(Subject => "A gzipp'ed tar file");
@@ -957,7 +970,7 @@ sub build {
 
     ### Miko's note: reorganized to check for exactly one of Data, Path, or FH
     ( defined( $params{Data} ) + defined( $params{Path} ) + defined( $params{FH} ) <= 1 )
-        or Carp::croak "supply exactly zero or one of (Data|Path|FH).\n";
+      or Carp::croak "supply exactly zero or one of (Data|Path|FH).\n";
 
     ### Create new instance, if necessary:
     ref($self) or $self = $self->new;
@@ -971,6 +984,7 @@ sub build {
 
     ### Interpret content-type-macros:
     if    ( $type eq 'TEXT' )   { $type = 'text/plain'; }
+    elsif ( $type eq 'HTML' )   { $type = 'text/html'; }
     elsif ( $type eq 'BINARY' ) { $type = 'application/octet-stream' }
     elsif ( $type eq 'AUTO' )   { $type = $self->suggest_type( $params{Path} ); }
 
@@ -991,9 +1005,9 @@ sub build {
     ### CONTENT-ID...
     ###
     if ( defined $params{Id} ) {
-        my $id=$params{Id};
-        $id="<$id>" unless $id=~/\A\s*<.*>\s*\z/;
-        $self->attr( 'content-id' => $id )
+        my $id = $params{Id};
+        $id = "<$id>" unless $id =~ /\A\s*<.*>\s*\z/;
+        $self->attr( 'content-id' => $id );
     }
 
 
@@ -1032,13 +1046,13 @@ sub build {
 
     ### Get it:
     my $enc =
-        ( $params{Encoding} || ( $AUTO_ENCODE and $self->suggest_encoding($type) ) || 'binary' );
+      ( $params{Encoding} || ( $AUTO_ENCODE and $self->suggest_encoding($type) ) || 'binary' );
     $self->attr( 'content-transfer-encoding' => lc($enc) );
 
     ### Sanity check:
     if ( $type =~ m{^(multipart|message)/} ) {
         ( $enc =~ m{^(7bit|8bit|binary)\Z} )
-            or Carp::croak( "illegal MIME: " . "can't have encoding $enc with type $type\n" );
+          or Carp::croak( "illegal MIME: " . "can't have encoding $enc with type $type\n" );
     }
 
     ### CONTENT-DISPOSITION...
@@ -1066,15 +1080,15 @@ sub build {
     if ( ( $ds_wanted or $ds_defaulted ) and !exists( $params{Date} ) ) {
         # Updated to use local time and numeric offset per RFC 2822
         # Calculate offset from UTC
-        use Time::Local;  # ships w/ Perl so should be OK to assume presence
-        my $t0 = timegm (0,0,0,2,0,70);       # one day from epoch
-        my $t1 = timelocal (0,0,0,2,0,70);
-        my $offset = $t0 - $t1;
-        my $offset_hrs = int ($offset / 3600);
-        my $offset_min = int ($offset / 60) - $offset_hrs * 60;
+        use Time::Local;    # ships w/ Perl so should be OK to assume presence
+        my $t0 = timegm( 0,    0, 0, 2, 0, 70 );    # one day from epoch
+        my $t1 = timelocal( 0, 0, 0, 2, 0, 70 );
+        my $offset     = $t0 - $t1;
+        my $offset_hrs = int( $offset / 3600 );
+        my $offset_min = int( $offset / 60 ) - $offset_hrs * 60;
         my $offset_str = sprintf "%+.2d%02d", $offset_hrs, $offset_min;
-        my ($u_wdy, $u_mon, $u_mdy, $u_time, $u_y4) =
-            split /\s+/, localtime()."";   ### should be non-locale-dependent
+        my ( $u_wdy, $u_mon, $u_mdy, $u_time, $u_y4 ) =
+          split /\s+/, localtime() . "";            ### should be non-locale-dependent
         my $date = "$u_wdy, $u_mdy $u_mon $u_y4 $u_time $offset_str";
         $self->add( "date", $date );
     }
@@ -1083,12 +1097,12 @@ sub build {
     my @paramz = @params;
     my $field;
     while (@paramz) {
-        my ( $tag, $value ) = ( shift (@paramz), shift (@paramz) );
+        my ( $tag, $value ) = ( shift(@paramz), shift(@paramz) );
 
         ### Get tag, if a tag:
-        if ( $tag =~ /^-(.*)/ ) {          ### old style, backwards-compatibility
+        if ( $tag =~ /^-(.*)/ ) {                   ### old style, backwards-compatibility
             $field = lc($1);
-        } elsif ( $tag =~ /^(.*):$/ ) {    ### new style
+        } elsif ( $tag =~ /^(.*):$/ ) {             ### new style
             $field = lc($1);
         } elsif ( known_field( $field = lc($tag) ) ) {    ### known field
             ### no-op
@@ -1130,9 +1144,9 @@ sub top_level {
     my ( $self, $onoff ) = @_;
     if ($onoff) {
         $self->attr( 'MIME-Version' => '1.0' );
-        my $uses = ( @Uses ? ( "(" . join ( "; ", @Uses ) . ")" ) : '' );
+        my $uses = ( @Uses ? ( "(" . join( "; ", @Uses ) . ")" ) : '' );
         $self->replace( 'X-Mailer' => "MIME::Lite $VERSION $uses" )
-            unless $VANILLA;
+          unless $VANILLA;
     } else {
         $self->attr( 'MIME-Version' => undef );
         $self->delete('X-Mailer');
@@ -1182,14 +1196,13 @@ sub add {
 
     ### If a dangerous option, warn them:
     Carp::carp "Explicitly setting a MIME header field ($tag) is dangerous:\n"
-        . "use the attr() method instead.\n"
-        if ( is_mime_field($tag) && !$QUIET );
+      . "use the attr() method instead.\n"
+      if ( is_mime_field($tag) && !$QUIET );
 
     ### Get array of clean values:
-    my @vals = (
-        ( ref($value) and ( ref($value) eq 'ARRAY' ) )
-        ? @{$value}
-        : ( $value . '' )
+    my @vals = ( ( ref($value) and ( ref($value) eq 'ARRAY' ) )
+                 ? @{$value}
+                 : ( $value . '' )
     );
     map { s/\n/\n /g } @vals;
 
@@ -1404,7 +1417,7 @@ sub fields {
 
         ### That was half the Schwartzian transform.  Here's the rest:
         @fields = map { $_->[1] }
-            sort { $a->[0] <=> $b->[0] } @ranked;
+          sort { $a->[0] <=> $b->[0] } @ranked;
     }
 
     ### Done!
@@ -1645,7 +1658,7 @@ sub scrub {
 
         ### Scrub disposition if no filename, or if content-type has same info:
         if ( !$self->_safe_attr('content-disposition.filename')
-            || $self->_safe_attr('content-type.name') )
+             || $self->_safe_attr('content-type.name') )
         {
             $self->replace( 'content-disposition', '' );
         }
@@ -1661,8 +1674,8 @@ sub scrub {
         }
 
         ### TBD: this is not really right for message/digest:
-        if ( ( keys %{ $self->{Attrs}{'content-type'} } == 1 )
-            and ( $self->_safe_attr('content-type') eq 'text/plain' ) )
+        if (     ( keys %{ $self->{Attrs}{'content-type'} } == 1 )
+             and ( $self->_safe_attr('content-type') eq 'text/plain' ) )
         {
             $self->replace( 'content-type', '' );
         }
@@ -1711,10 +1724,9 @@ The new current value is returned.
 sub binmode {
     my $self = shift;
     $self->{Binmode} = shift if (@_);    ### argument? set override
-    return (
-        defined( $self->{Binmode} )
-        ? $self->{Binmode}
-        : ( $self->attr("content-type") !~ m{^(text|message)/}i )
+    return ( defined( $self->{Binmode} )
+             ? $self->{Binmode}
+             : ( $self->attr("content-type") !~ m{^(text|message)/}i )
     );
 }
 
@@ -1736,7 +1748,7 @@ to be recomputed (possibly to nothing).
 sub data {
     my $self = shift;
     if (@_) {
-        $self->{Data} = ( ( ref( $_[0] ) eq 'ARRAY' ) ? join ( '', @{ $_[0] } ) : $_[0] );
+        $self->{Data} = ( ( ref( $_[0] ) eq 'ARRAY' ) ? join( '', @{ $_[0] } ) : $_[0] );
         $self->get_length;
     }
     $self->{Data};
@@ -1916,7 +1928,7 @@ sub sign {
         $sig = <SIG>;                            ### sssssssssssssslurp...
         close SIG;                               ### ...aaaaaaaaahhh!
     }
-    $sig = join ( '', @$sig ) if ( ref($sig) and ( ref($sig) eq 'ARRAY' ) );
+    $sig = join( '', @$sig ) if ( ref($sig) and ( ref($sig) eq 'ARRAY' ) );
 
     ### Append, following Internet conventions:
     $self->{Data} .= "\n-- \n$sig";
@@ -1964,8 +1976,8 @@ sub suggest_encoding {
         if ( scalar(@mappings) ) {
             ### Just pick the first one:
             my ( $suffix, $mimetype, $encoding ) = @{ $mappings[0] };
-            if ( $encoding
-                && $encoding =~ /^(base64|binary|[78]bit|quoted-printable)$/i )
+            if (    $encoding
+                 && $encoding =~ /^(base64|binary|[78]bit|quoted-printable)$/i )
             {
                 return lc($encoding);    ### sanity check
             }
@@ -2070,7 +2082,7 @@ sub print {
     my ( $self, $out ) = @_;
 
     ### Coerce into a printable output handle:
-    $out = wrap MIME::Lite::IO_Handle $out;
+    $out = MIME::Lite::IO_Handle->wrap($out);
 
     ### Output head, separator, and body:
     $self->verify_data if $AUTO_VERIFY;    ### prevents missing parts!
@@ -2090,7 +2102,7 @@ sub print_for_smtp {
     my ( $self, $out ) = @_;
 
     ### Coerce into a printable output handle:
-    $out = wrap MIME::Lite::IO_Handle $out;
+    $out = MIME::Lite::IO_Handle->wrap($out);
 
     ### Create a safe head:
     my @fields = grep { $_->[0] ne 'bcc' } @{ $self->fields };
@@ -2098,7 +2110,7 @@ sub print_for_smtp {
 
     ### Output head, separator, and body:
     $out->print( $header, "\n" );
-    $self->print_body($out,'1');
+    $self->print_body( $out, '1' );
 }
 
 #------------------------------
@@ -2128,7 +2140,7 @@ sub print_body {
     my ( $self, $out, $is_smtp ) = @_;
 
     ### Coerce into a printable output handle:
-    $out = wrap MIME::Lite::IO_Handle $out;
+    $out = MIME::Lite::IO_Handle->wrap($out);
 
     ### Output either the body or the parts.
     ###   Notice that we key off of the content-type!  We expect fewer
@@ -2138,10 +2150,9 @@ sub print_body {
         my $boundary = $self->attr('content-type.boundary');
 
         ### Preamble:
-        $out->print(
-            defined( $self->{Preamble} )
-            ? $self->{Preamble}
-            : "This is a multi-part message in MIME format.\n"
+        $out->print( defined( $self->{Preamble} )
+                     ? $self->{Preamble}
+                     : "This is a multi-part message in MIME format.\n"
         );
 
         ### Parts:
@@ -2157,11 +2168,11 @@ sub print_body {
         my @parts = @{ $self->{Parts} };
 
         ### It's a toss-up; try both data and parts:
-        if    ( @parts == 0 ) { $self->print_simple_body($out,$is_smtp) }
+        if ( @parts == 0 ) { $self->print_simple_body( $out, $is_smtp ) }
         elsif ( @parts == 1 ) { $parts[0]->print($out) }
         else { Carp::croak "can't handle message with >1 part\n"; }
     } else {
-        $self->print_simple_body($out,$is_smtp);
+        $self->print_simple_body( $out, $is_smtp );
     }
     1;
 }
@@ -2190,11 +2201,12 @@ sub print_simple_body {
     my ( $self, $out, $is_smtp ) = @_;
 
     ### Coerce into a printable output handle:
-    $out = wrap MIME::Lite::IO_Handle $out;
+    $out = MIME::Lite::IO_Handle->wrap($out);
 
     ### Get content-transfer-encoding:
     my $encoding = uc( $self->attr('content-transfer-encoding') );
-    warn "M::L >>> Encoding using $encoding, is_smtp=".($is_smtp||0)."\n" if $MIME::Lite::DEBUG;
+    warn "M::L >>> Encoding using $encoding, is_smtp=" . ( $is_smtp || 0 ) . "\n"
+      if $MIME::Lite::DEBUG;
 
     ### Notice that we don't just attempt to slurp the data in from a file:
     ### by processing files piecemeal, we still enable ourselves to prepare
@@ -2202,12 +2214,12 @@ sub print_simple_body {
 
     ### Is the data in-core?  If so, blit it out...
     if ( defined( $self->{Data} ) ) {
-        DATA:
+      DATA:
         {
             local $_ = $encoding;
 
             /^BINARY$/ and do {
-                $is_smtp and $self->{Data}=~s/(?!\r)\n\z/\r/;
+                $is_smtp and $self->{Data} =~ s/(?!\r)\n\z/\r/;
                 $out->print( $self->{Data} );
                 last DATA;
             };
@@ -2249,25 +2261,25 @@ sub print_simple_body {
         if ( defined( $self->{Path} ) ) {
             $DATA = new FileHandle || Carp::croak "can't get new filehandle\n";
             $DATA->open("$self->{Path}")
-                or Carp::croak "open $self->{Path}: $!\n";
+              or Carp::croak "open $self->{Path}: $!\n";
         } else {
             $DATA = $self->{FH};
         }
         CORE::binmode($DATA) if $self->binmode;
 
         ### Encode piece by piece:
-        PATH:
+      PATH:
         {
             local $_ = $encoding;
 
             /^BINARY$/ and do {
-                my $last="";
-                while (read( $DATA, $_, 2048 )) {
+                my $last = "";
+                while ( read( $DATA, $_, 2048 ) ) {
                     $out->print($last) if length $last;
-                    $last=$_;
+                    $last = $_;
                 }
-                if (length $last) {
-                    $is_smtp and $last=~s/(?!\r)\n\z/\r/;
+                if ( length $last ) {
+                    $is_smtp and $last =~ s/(?!\r)\n\z/\r/;
                     $out->print($last);
                 }
                 last PATH;
@@ -2319,7 +2331,7 @@ sub print_header {
     my ( $self, $out ) = @_;
 
     ### Coerce into a printable output handle:
-    $out = wrap MIME::Lite::IO_Handle $out;
+    $out = MIME::Lite::IO_Handle->wrap($out);
 
     ### Output the header:
     $out->print( $self->header_as_string );
@@ -2506,6 +2518,9 @@ That's it.  Now, if you ever move your script to a Unix box, all you
 need to do is change that line in the setup and you're done.
 All of your $msg-E<gt>send invocations will work as expected.
 
+After sending, the method last_send_successful() can be used to determine
+if the send was succesful or not.
+
 =cut
 
 
@@ -2520,7 +2535,7 @@ sub send {
             @args   = @_;
         } else {           ### no args; use defaults
             $method = "send_by_$Sender";
-            @args = @{ $SenderArgs{$Sender} || [] };
+            @args   = @{ $SenderArgs{$Sender} || [] };
 
         }
         $self->verify_data if $AUTO_VERIFY;    ### prevents missing parts!
@@ -2529,7 +2544,7 @@ sub send {
     } else {                                   ### class method:
         if (@_) {
             my @old = ( $Sender, @{ $SenderArgs{$Sender} } );
-            $Sender = $meth;
+            $Sender              = $meth;
             $SenderArgs{$Sender} = [@_];       ### remaining args
             return @old;
         } else {
@@ -2537,6 +2552,7 @@ sub send {
         }
     }
 }
+
 
 #------------------------------
 
@@ -2604,12 +2620,15 @@ Thus:
 
 =back
 
+After sending, the method last_send_successful() can be used to determine
+if the send was succesful or not.
+
 =cut
 
 
 sub send_by_sendmail {
     my $self = shift;
-
+    my $return;
     if ( @_ == 1 and !ref $_[0] ) {
         ### Use the given command...
         my $sendmailcmd = shift @_;
@@ -2619,10 +2638,10 @@ sub send_by_sendmail {
         open SENDMAIL, "|$sendmailcmd" or Carp::croak "open |$sendmailcmd: $!\n";
         $self->print( \*SENDMAIL );
         close SENDMAIL;
-        return ( ( $? >> 8 ) ? undef: 1 );
-    } else {            ### Build the command...
-        my %p = map { UNIVERAL::isa($_,'ARRAY') ? @$_
-                      : UNIVERAL::isa($_,'HASH') ? %$_ : $_ } @_;
+        $return = ( ( $? >> 8 ) ? undef: 1 );
+    } else {    ### Build the command...
+        my %p =
+          map { UNIVERAL::isa( $_, 'ARRAY' ) ? @$_ : UNIVERAL::isa( $_, 'HASH' ) ? %$_ : $_ } @_;
 
         $p{Sendmail} = $SENDMAIL unless defined $p{Sendmail};
 
@@ -2650,9 +2669,10 @@ sub send_by_sendmail {
         } else {          ### parent
             $self->print( \*SENDMAIL );
             close SENDMAIL || die "error closing $p{Sendmail}: $! (exit $?)\n";
-            return 1;
+            $return = 1;
         }
     }
+    return $self->{last_send_successful} = $return;
 }
 
 #------------------------------
@@ -2670,6 +2690,8 @@ L<Net::SMTP|Net::SMTP> use the defaults in Libnet.cfg.
 ARGS are a list of key value pairs which may be selected from the
 list below. Many of these are just passed through to specific
 L<Net::SMTP|Net::SMTP> commands and you should review that module for details.
+
+Please see L<Good-vs-bad email addresses with send_by_smtp()|/Good-vs-bad email addresses with send_by_smtp()>
 
 =over 4
 
@@ -2715,19 +2737,23 @@ Authenticate with L<Net::SMTP::auth()|Net::SMTP/auth> using this password.
 =item NoAuth
 
 Normally if AuthUser and AuthPass are defined MIME::Lite will attempt
-to use the with L<Net::SMTP::auth()|Net::SMTP/auth> command to authenticate
-the connection. If this value is true then no authentication occurs.
+to use them with the L<Net::SMTP::auth()|Net::SMTP/auth> command to authenticate
+the connection, however if this value is true then no authentication occurs.
 
 =item To
 
 Sets the addresses to send to. Can be a string or a reference to an
 array of strings. Normally this is extracted from the To: (and Cc: and
-Bcc: fields as per $AUTO_CC). This value overrides that.
+Bcc: fields if $AUTO_CC is true).
+
+This value overrides that.
 
 =item From
 
 Sets the email address to send from. Normally this value is extracted
-from the From: field of the mail itself. This value overides that.
+from the Return-Path: or From: field of the mail itself (in that order).
+
+This value overides that.
 
 =back
 
@@ -2750,13 +2776,19 @@ This means that you can easily try to authenticate against a single host with se
 different users, or connect several hosts with different authentication but
 identical other options or any number of other combinations. Turning Debug
 on in the ARGS for instance causes Debug to be enabled on all attempts
-unless specifically overriden with a defined but false value.
+unless specifically overriden.
 
 I<Returns:>
 True on success, in multiple host mode returns false on failure, in single host mode
-it croaks with an error message.
+it croaks with an error message.  The method smtp_host_errors() will return a reference
+to a hash with host names as keys and with a reference to an array of the errors
+encountered as the values.
+
+After sending, the method last_send_successful() can be used to determine
+if the send was succesful or not.
 
 =cut
+
 
 # Derived from work by Andrew McRae. Version 0.2  anm  09Sep97
 # Copyright 1997 Optimation New Zealand Ltd.
@@ -2766,29 +2798,33 @@ it croaks with an error message.
 # May be modified/redistributed under the same terms as Perl.
 
 # external opts
-my @_mail_opts =qw( Size Return Bits Transaction Envelope );
-my @_recip_opts=qw( SkipBad );
-my @_new_opts  =qw( Hello LocalAddr LocalPort Timeout ExactAddresses Debug );
+my @_mail_opts     = qw( Size Return Bits Transaction Envelope );
+my @_recip_opts    = qw( SkipBad );
+my @_net_smtp_opts = qw( Hello LocalAddr LocalPort Timeout ExactAddresses Debug );
 # internal:  qw( NoAuth AuthUser AuthPass To From Host);
 
 sub send_by_smtp {
     require Net::SMTP;
+    my $self  = shift;
+    my $hosts = [];
 
-    my $self = shift;
     # First handle a potential ref as the first argument.
-    my $hosts=[];
-    if (UNIVERSAL::isa($_[0],'ARRAY')) {
-        $hosts=shift @_;
-    } elsif (UNIVERSAL::isa($_[0],'HASH')) {
-        $hosts=[shift @_];
+    if ( UNIVERSAL::isa( $_[0], 'ARRAY' ) ) {
+        $hosts = shift @_;
+    } elsif ( UNIVERSAL::isa( $_[0], 'HASH' ) ) {
+        $hosts = [ shift @_ ];
     }
-
+    $self->{hosts} = $hosts;
     # Then handle the old style pass through to Net::SMTP::new
-    my ($hostname,%args)=@_;
+    my $hostname;
+    if ( @_ % 2 ) {
+        $hostname = shift;
+    }
+    my %args = @_;
     # We may need the "From:" and "To:" headers to pass to the
     # SMTP mailer also.
 
-    my @hdr_to= extract_only_addrs(scalar $self->get('To'));
+    my @hdr_to = extract_only_addrs( scalar $self->get('To') );
     if ($AUTO_CC) {
         foreach my $field (qw(Cc Bcc)) {
             my $value = $self->get($field);
@@ -2796,73 +2832,127 @@ sub send_by_smtp {
         }
     }
 
-    %args=(
-          To => \@hdr_to,
-          From => (extract_only_addrs(scalar $self->get('From')))[0],
-          Host => $hostname,
-          %args,
-         );
+    %args = (
+            To   => \@hdr_to,
+            From => (
+                    scalar( extract_only_addrs( scalar $self->get('Return-Path') ) )
+                    ||
+                    scalar( extract_only_addrs( scalar $self->get('From') ) )
+                    ) ,
+            Host => $hostname, %args,
+    );
+
+    use Data::Dumper;
+    warn Dumper(\%args);
+
 
     # provide a way for the non ref form to be treated as the
     # ref form.
-    push @$hosts,\%args unless @$hosts;
+    push @$hosts, \%args unless @$hosts;
+    my %errors;
 
     # Cycle through the hosts
-    my @badhosts;
-    my $error;
-    while (@$hosts) {
-        $error='';
-        my %host=%{$hosts->[0]};
-        foreach my $arg (keys %args) {
-            $host{$arg}=$args{$arg} unless defined $host{$arg};
+    my $last_error = '';
+    $self->{host_errors} = \%errors;
+    foreach my $host (@$hosts) {
+        my %host = ( %args, %$host );
+        # now trap anything else
+        eval {
+            # Create SMTP client.
+            # MIME::Lite::SMTP is just a wrapper giving a print method
+            # to the SMTP object.
+
+            my %opts = map { exists $host{$_} ? ( $_ => $host{$_} ) : () } @_net_smtp_opts;
+            my $smtp = MIME::Lite::SMTP->new( $host{Host}, %opts )
+              or Carp::croak "SMTP Failed to connect to mail server: $!\n";
+
+            # Possibly authenticate
+            if (     defined $host{AuthUser}
+                 and defined $host{AuthPass}
+                 and !$host{NoAuth} )
+            {
+                if ($smtp->supports('AUTH',500,["Command unknown: 'AUTH'"])) {
+                    $smtp->auth( $host{AuthUser}, $host{AuthPass} )
+                        or die "SMTP auth() command failed: $!\n" . $smtp->message . "\n";
+                } else {
+                    die "SMTP auth() command not supported on $host{Host}\n";
+                }
+            }
+
+            # Send the mail command
+            %opts = map { exists $host{$_} ? ( $_ => $host{$_} ) : () } @_mail_opts;
+            $smtp->mail( $host{From}, %opts ? \%opts : () )
+              or die "SMTP mail() command failed: $!\n" . $smtp->message . "\n";
+
+            # Send the recipients command
+            @{ $host{To} }
+              or Carp::croak "send_by_smtp: nobody to send to for host $host{Host}?!\n";
+            %opts = map { exists $host{$_} ? ( $_ => $host{$_} ) : () } @_recip_opts;
+            $smtp->recipient( @{ $host{To} }, %opts ? \%opts : () )
+              or die "SMTP recipient() command failed: $!\n" . $smtp->message . "\n";
+
+            # Send the data
+            $smtp->data()
+              or die "SMTP data() command failed: $!\n" . $smtp->message . "\n";
+            $self->print_for_smtp($smtp);
+
+            # Finish the mail
+            $smtp->dataend()
+              or Carp::croak "Net::CMD (Net::SMTP) DATAEND command failed.\n"
+              . "Last server message was:"
+              . $smtp->message
+              . "This probably represents a problem with newline encoding ";
+
+            # terminate the session
+            $smtp->quit;
+        };
+        if ($@) {
+            $last_error = $@;
+            # Propagate weird errors.
+            die $last_error unless $last_error =~ /^SMTP/;
+            push @{ $errors{ defined $host->{Host} ? $host->{Host} : '*default*' } }, $last_error;
+        } else {
+            return $self->{last_send_successful} = 1;
         }
-
-        # Create SMTP client. MIME::Lite::SMTP is just a wrapper
-        # giving a print method to the SMTP object.
-        my %opts=map { exists $host{$_} ? ($_ => $host{$_}) : () } @_new_opts;
-        my $smtp = MIME::Lite::SMTP->new($host{Host},%opts)
-            or ($error="Failed to connect to mail server: $!\n"),next;
-
-        # Possibly authenticate
-        if ($host{AuthUser} and $host{AuthPass} and !$host{NoAuth})  {
-            $smtp->auth($host{AuthUser},$host{AuthPass})
-                or ($error="SMTP auth() command failed: $!\n" . $smtp->message . "\n" ),next;
-        }
-
-        # Send the mail command
-        %opts=map { exists $host{$_} ? ($_ => $host{$_}) : () } @_mail_opts;
-        $smtp->mail($host{from},%opts ? \%opts : ())
-            or ($error="SMTP mail() command failed: $!\n" . $smtp->message . "\n" ),next;
-
-        # Send the recipients command
-        @{$host{To}} or Carp::croak "send_by_smtp: nobody to send to for host $host{Host}?!\n";
-        %opts=map { exists $host{$_} ? ($_ => $host{$_}) : () } @_recip_opts;
-        $smtp->recipient(@{$host{To}},%opts ? \%opts : ())
-            or ($error="SMTP recipient() command failed: $!\n" . $smtp->message . "\n" ),next;
-
-        # Send the data
-        $smtp->data()
-            or ($error="SMTP data() command failed: $!\n" . $smtp->message . "\n" ),next;
-        $self->print_for_smtp($smtp);
-
-        # Finish the mail
-        $smtp->dataend()
-            or Carp::croak( "Net::CMD (Net::SMTP) DATAEND command failed.\n".
-                            "Last server message was:" . $smtp->message .
-                            "This probably represents a problem with newline encoding " );
-
-        # terminate the session
-        $smtp->quit;
-        last;
-    } continue {
-        push @badhosts,shift @$hosts;
     }
-    push @$hosts,@badhosts;
-    Carp::croak $error if $error and @$hosts==1;
-    return !$error;
+    Carp::croak $last_error if $last_error and @$hosts == 1;
+    return $self->{last_send_successful} = 0;
+}
+
+=item last_send_successful
+
+This method will return TRUE if the last send() or send_by_XXX() method call was
+successful. It will return defined but false if it was not successful, and undefined
+if the object had not been used to send yet.
+
+=cut
+
+
+sub last_send_successful {
+    my $self = shift;
+    return $self->{last_send_successful};
 }
 
 
+=item smtp_host_errors
+
+This method will return a reference to a hash with host names as keys and
+with a reference to an array of the errors encountered during the last
+send_by_smtp() call. It is primarily intended for supporting multiple host
+scenarios.
+
+Note that this hash may contain error data even after a successful send,
+only if the hash is empty were there no errors.
+
+Returns undef if the object has not been used to send via send_by_smtp().
+
+=cut
+
+
+sub smtp_host_errors {
+    my $self = shift;
+    return $self->{host_errors};
+}
 
 ### Provided by Andrew McRae. Version 0.2  anm  09Sep97
 ### Copyright 1997 Optimation New Zealand Ltd.
@@ -2871,12 +2961,12 @@ sub send_by_smtp {
 ### Until 3.01_03 this was send_by_smtp()
 sub send_by_smtp_simple {
     my ( $self, @args ) = @_;
-
+    $self->{last_send_successful} = 0;
     ### We need the "From:" and "To:" headers to pass to the SMTP mailer:
     my $hdr = $self->fields();
 
-    my $from_header=$self->get('From');
-    my ($from) = extract_only_addrs( $from_header );
+    my $from_header = $self->get('From');
+    my ($from) = extract_only_addrs($from_header);
 
     warn "M::L>>> $from_header => $from" if $MIME::Lite::DEBUG;
 
@@ -2898,22 +2988,24 @@ sub send_by_smtp_simple {
     ### Create SMTP client:
     require Net::SMTP;
     my $smtp = MIME::Lite::SMTP->new(@args)
-        or Carp::croak("Failed to connect to mail server: $!\n");
+      or Carp::croak("Failed to connect to mail server: $!\n");
     $smtp->mail($from)
-        or Carp::croak( "SMTP MAIL command failed: $!\n" . $smtp->message . "\n" );
+      or Carp::croak( "SMTP MAIL command failed: $!\n" . $smtp->message . "\n" );
     $smtp->to(@to_all)
-        or Carp::croak( "SMTP RCPT command failed: $!\n" . $smtp->message . "\n" );
+      or Carp::croak( "SMTP RCPT command failed: $!\n" . $smtp->message . "\n" );
     $smtp->data()
-        or Carp::croak( "SMTP DATA command failed: $!\n" . $smtp->message . "\n" );
+      or Carp::croak( "SMTP DATA command failed: $!\n" . $smtp->message . "\n" );
 
     ### MIME::Lite can print() to anything with a print() method:
     $self->print_for_smtp($smtp);
 
     $smtp->dataend()
-        or Carp::croak( "Net::CMD (Net::SMTP) DATAEND command failed.\n".
-                        "Last server message was:" . $smtp->message .
-                        "This probably represents a problem with newline encoding " );
+      or Carp::croak(   "Net::CMD (Net::SMTP) DATAEND command failed.\n"
+                      . "Last server message was:"
+                      . $smtp->message
+                      . "This probably represents a problem with newline encoding " );
     $smtp->quit;
+    $self->{last_send_successful} = 1;
     1;
 }
 
@@ -2926,7 +3018,8 @@ sub send_by_smtp_simple {
 #
 sub send_by_sub {
     my ( $self, $subref, @args ) = @_;
-    &$subref( $self, @args );
+    $self->{last_send_successful} = &$subref( $self, @args );
+
 }
 
 #------------------------------
@@ -2942,7 +3035,7 @@ I<You should use send() instead.>
 
 sub sendmail {
     my $self = shift;
-    $self->send( 'sendmail', join ( ' ', @_ ) );
+    $self->send( 'sendmail', join( ' ', @_ ) );
 }
 
 =back
@@ -3000,33 +3093,33 @@ use vars qw( @ISA );
 @ISA = qw(Net::SMTP);
 
 # some of the below is borrowed from Data::Dumper
-my %esc = (
-    "\a" => "\\a",
-    "\b" => "\\b",
-    "\t" => "\\t",
-    "\n" => "\\n",
-    "\f" => "\\f",
-    "\r" => "\\r",
-    "\e" => "\\e",
+my %esc = ( "\a" => "\\a",
+            "\b" => "\\b",
+            "\t" => "\\t",
+            "\n" => "\\n",
+            "\f" => "\\f",
+            "\r" => "\\r",
+            "\e" => "\\e",
 );
 
 sub _hexify {
-    local $_=shift;
-    my @split=m/(.{1,16})/gs;
+    local $_ = shift;
+    my @split = m/(.{1,16})/gs;
     foreach my $split (@split) {
-        (my $txt=$split)=~s/([\a\b\t\n\f\r\e])/$esc{$1}/sg;
-        $split=~s/(.)/sprintf("%02X ",ord($1))/sge;
+        ( my $txt = $split ) =~ s/([\a\b\t\n\f\r\e])/$esc{$1}/sg;
+        $split =~ s/(.)/sprintf("%02X ",ord($1))/sge;
         print STDERR "M::L >>> $split : $txt\n";
     }
 }
 
 sub print {
-    my $smtp=shift;
-    $MIME::Lite::DEBUG and _hexify(join("",@_));
+    my $smtp = shift;
+    $MIME::Lite::DEBUG and _hexify( join( "", @_ ) );
     $smtp->datasend(@_)
-        or Carp::croak( "Net::CMD (Net::SMTP) DATASEND command failed.\n".
-                        "Last server message was:" . $smtp->message .
-                        "This probably represents a problem with newline encoding " );
+      or Carp::croak(   "Net::CMD (Net::SMTP) DATASEND command failed.\n"
+                      . "Last server message was:"
+                      . $smtp->message
+                      . "This probably represents a problem with newline encoding " );
 }
 
 
@@ -3043,14 +3136,14 @@ sub wrap {
     no strict 'refs';
 
     ### Get default, if necessary:
-    $fh or $fh = select;    ### no filehandle means selected one
-    ref($fh) or $fh = \*$fh;    ### scalar becomes a globref
+    $fh      or $fh = select;    ### no filehandle means selected one
+    ref($fh) or $fh = \*$fh;     ### scalar becomes a globref
 
     ### Stop right away if already a printable object:
     return $fh if ( ref($fh) and ( ref($fh) ne 'GLOB' ) );
 
     ### Get and return a printable interface:
-    bless \$fh, $class;         ### wrap it in a printable interface
+    bless \$fh, $class;          ### wrap it in a printable interface
 }
 
 ### Print:
@@ -3076,7 +3169,7 @@ sub wrap {
 ### Print:
 sub print {
     my $self = shift;
-    $$self .= join ( '', @_ );
+    $$self .= join( '', @_ );
     1;
 }
 
@@ -3262,9 +3355,6 @@ reliably:
     username
     full.name@some.host.com
     "Name, Full" <full.name@some.host.com>
-
-This last form is discouraged because SMTP must be able to get
-at the I<name> or I<name@domain> portion. I<see note below.>
 
 B<Disclaimer:>
 MIME::Lite was never intended to be a Mail User Agent, so please
@@ -3546,7 +3636,7 @@ you provide.
 
 =head1 VERSION
 
-Version: 3.01_03 (Dev/Test Release)
+Version: 3.01_04 (Dev/Test Release)
 
 =head1 CHANGE LOG
 
