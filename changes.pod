@@ -11,6 +11,10 @@ using the published interface.  (Sam Tregar)
 Removed the "advanced features", ie auto-fallback delivery, from
 send_by_smtp. They didn't belong there in the first place.
 
+=item Version 3.01_06 (2007/07/29)
+
+First release from Perl Email Project.  Updated packaging.
+
 =item Version 3.01_04 (2004/05/05)
 
 Reworked the new send_by_smtp stuff. Documentation modifications.
