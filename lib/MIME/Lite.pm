@@ -341,7 +341,7 @@ use vars qw(
 #==============================
 #
 # GLOBALS, EXTERNAL/CONFIGURATION...
-$VERSION = "3.01_02";
+$VERSION = "3.01_03";
 
 ### Automatically interpret CC/BCC for SMTP:
 $AUTO_CC = 1;
@@ -2520,12 +2520,8 @@ sub send {
             @args   = @_;
         } else {           ### no args; use defaults
             $method = "send_by_$Sender";
-            # FIXME??:
-            #if ($method eq 'send_by_sendmail') {
-            #   @args = ( $SenderArgs{$Sender} || [] );
-            #} else {
-                @args = @{ $SenderArgs{$Sender} || [] };
-            #}
+            @args = @{ $SenderArgs{$Sender} || [] };
+
         }
         $self->verify_data if $AUTO_VERIFY;    ### prevents missing parts!
         Carp::croak "Unknown send method '$meth'" unless $self->can($method);
@@ -2546,7 +2542,7 @@ sub send {
 
 =item send_by_sendmail SENDMAILCMD
 
-=item send_by_sendmail PARAM=>VALUE, ...
+=item send_by_sendmail PARAM=>VALUE, ARRAY, HASH...
 
 I<Instance method.>
 Send message via an external "sendmail" program
@@ -2559,8 +2555,9 @@ string, SENDMAILCMD.  Nothing fancy is done; the message is simply
 piped in.
 
 However, if your needs are a little more advanced, you can specify
-zero or more of the following PARAM/VALUE pairs; a Unix-style,
-taint-safe "sendmail" command will be constructed for you:
+zero or more of the following PARAM/VALUE pairs (or a reference to hash
+or array of such arguments as well as any combination thereof); a
+Unix-style, taint-safe "sendmail" command will be constructed for you:
 
 =over 4
 
@@ -2613,27 +2610,30 @@ Thus:
 sub send_by_sendmail {
     my $self = shift;
 
-    if ( @_ == 1 ) { # FIXME???: and !ref $_[0] ) {
-            ### Use the given command...
+    if ( @_ == 1 and !ref $_[0] ) {
+        ### Use the given command...
         my $sendmailcmd = shift @_;
 
         ### Do it:
+        local *SENDMAIL;
         open SENDMAIL, "|$sendmailcmd" or Carp::croak "open |$sendmailcmd: $!\n";
         $self->print( \*SENDMAIL );
         close SENDMAIL;
         return ( ( $? >> 8 ) ? undef: 1 );
     } else {            ### Build the command...
-        my %p = map { ref $_ ? @$_ : $_ } @_;
-        $p{Sendmail} ||= $SENDMAIL;
+        my %p = map { UNIVERAL::isa($_,'ARRAY') ? @$_
+                      : UNIVERAL::isa($_,'HASH') ? %$_ : $_ } @_;
+
+        $p{Sendmail} = $SENDMAIL unless defined $p{Sendmail};
 
         ### Start with the command and basic args:
         my @cmd = ( $p{Sendmail}, @{ $p{BaseArgs} || [ '-t', '-oi', '-oem' ] } );
 
         ### See if we are forcibly setting the sender:
-        $p{SetSender} = 1 if defined( $p{FromSender} );
+        $p{SetSender} ||= defined( $p{FromSender} );
 
         ### Add the -f argument, unless we're explicitly told NOT to:
-        unless ( exists( $p{SetSender} ) and !$p{SetSender} ) {
+        if ( $p{SetSender} ) {
             my $from = $p{FromSender} || ( $self->get('From') )[0];
             if ($from) {
                 my ($from_addr) = extract_full_addrs($from);
@@ -2657,27 +2657,219 @@ sub send_by_sendmail {
 
 #------------------------------
 
-=item send_by_smtp ARGS...
+=item send_by_smtp HOST, ARGS...
+
+=item send_by_smtp REF, HOST, ARGS
 
 I<Instance method.>
 Send message via SMTP, using Net::SMTP.
-The optional ARGS are sent into Net::SMTP::new(): usually, these are
 
-    MAILHOST, OPTION=>VALUE, ...
+HOST is the name of SMTP server to connect to, or undef to have
+L<Net::SMTP|Net::SMTP> use the defaults in Libnet.cfg.
 
-Note that the list of recipients is taken from the
-"To", "Cc" and "Bcc" fields.
+ARGS are a list of key value pairs which may be selected from the
+list below. Many of these are just passed through to specific
+L<Net::SMTP|Net::SMTP> commands and you should review that module for details.
 
-Returns true on success, false or exception on error.
+=over 4
+
+=item Hello
+
+=item LocalAddr
+
+=item LocalPort
+
+=item Timeout
+
+=item ExactAddresses
+
+=item Debug
+
+See L<Net::SMTP::new()|Net::SMTP/"mail"> for details.
+
+=item Size
+
+=item Return
+
+=item Bits
+
+=item Transaction
+
+=item Envelope
+
+See L<Net::SMTP::mail()|Net::SMTP/mail> for details.
+
+=item SkipBad
+
+If true doesnt throw an error when multiple email addresses are provided
+and some are not valid. See L<Net::SMTP::recipient()|Net::SMTP/recipient> for details.
+
+=item AuthUser
+
+Authenticate with L<Net::SMTP::auth()|Net::SMTP/auth> using this username.
+
+=item AuthPass
+
+Authenticate with L<Net::SMTP::auth()|Net::SMTP/auth> using this password.
+
+=item NoAuth
+
+Normally if AuthUser and AuthPass are defined MIME::Lite will attempt
+to use the with L<Net::SMTP::auth()|Net::SMTP/auth> command to authenticate
+the connection. If this value is true then no authentication occurs.
+
+=item To
+
+Sets the addresses to send to. Can be a string or a reference to an
+array of strings. Normally this is extracted from the To: (and Cc: and
+Bcc: fields as per $AUTO_CC). This value overrides that.
+
+=item From
+
+Sets the email address to send from. Normally this value is extracted
+from the From: field of the mail itself. This value overides that.
+
+=back
+
+I<Advanced Options:>
+send_by_smtp also allows for a reference to be provided as the first argument to allow
+more specific control of how things work. The reference can either be
+to a hash, or to an array of hashrefs. If an array of hashrefs then each
+hash represents a host to try to send via. Each host will be tried in
+turn until one suceeds, (specific authentication for each host is possible
+this way). The array will also be altered as each failed
+host is shifted off the front and pushed on to the back of the array.
+
+The options allowed in the hash are the same as the normal ARGS list, with
+the addition of the Host parameter which is identical to the normal Host
+parameter but is provided from within the hash.
+
+The interaction between the hashes and the normal Host and ARGS is that
+the normal values are used as defaults if that argument isn't explicitly provided.
+This means that you can easily try to authenticate against a single host with several
+different users, or connect several hosts with different authentication but
+identical other options or any number of other combinations. Turning Debug
+on in the ARGS for instance causes Debug to be enabled on all attempts
+unless specifically overriden with a defined but false value.
+
+I<Returns:>
+True on success, in multiple host mode returns false on failure, in single host mode
+it croaks with an error message.
 
 =cut
+
+# Derived from work by Andrew McRae. Version 0.2  anm  09Sep97
+# Copyright 1997 Optimation New Zealand Ltd.
+# Extensive rewrite by Yves initially to handle authentication
+# at the urging of Aaron Johnson, which grew to a newer more powerful
+# interface.
+# May be modified/redistributed under the same terms as Perl.
+
+# external opts
+my @_mail_opts =qw( Size Return Bits Transaction Envelope );
+my @_recip_opts=qw( SkipBad );
+my @_new_opts  =qw( Hello LocalAddr LocalPort Timeout ExactAddresses Debug );
+# internal:  qw( NoAuth AuthUser AuthPass To From Host);
+
+sub send_by_smtp {
+    require Net::SMTP;
+
+    my $self = shift;
+    # First handle a potential ref as the first argument.
+    my $hosts=[];
+    if (UNIVERSAL::isa($_[0],'ARRAY')) {
+        $hosts=shift @_;
+    } elsif (UNIVERSAL::isa($_[0],'HASH')) {
+        $hosts=[shift @_];
+    }
+
+    # Then handle the old style pass through to Net::SMTP::new
+    my ($hostname,%args)=@_;
+    # We may need the "From:" and "To:" headers to pass to the
+    # SMTP mailer also.
+
+    my @hdr_to= extract_only_addrs(scalar $self->get('To'));
+    if ($AUTO_CC) {
+        foreach my $field (qw(Cc Bcc)) {
+            my $value = $self->get($field);
+            push @hdr_to, extract_only_addrs($value) if defined($value);
+        }
+    }
+
+    %args=(
+          To => \@hdr_to,
+          From => (extract_only_addrs(scalar $self->get('From')))[0],
+          Host => $hostname,
+          %args,
+         );
+
+    # provide a way for the non ref form to be treated as the
+    # ref form.
+    push @$hosts,\%args unless @$hosts;
+
+    # Cycle through the hosts
+    my @badhosts;
+    my $error;
+    while (@$hosts) {
+        $error='';
+        my %host=%{$hosts->[0]};
+        foreach my $arg (keys %args) {
+            $host{$arg}=$args{$arg} unless defined $host{$arg};
+        }
+
+        # Create SMTP client. MIME::Lite::SMTP is just a wrapper
+        # giving a print method to the SMTP object.
+        my %opts=map { exists $host{$_} ? ($_ => $host{$_}) : () } @_new_opts;
+        my $smtp = MIME::Lite::SMTP->new($host{Host},%opts)
+            or ($error="Failed to connect to mail server: $!\n"),next;
+
+        # Possibly authenticate
+        if ($host{AuthUser} and $host{AuthPass} and !$host{NoAuth})  {
+            $smtp->auth($host{AuthUser},$host{AuthPass})
+                or ($error="SMTP auth() command failed: $!\n" . $smtp->message . "\n" ),next;
+        }
+
+        # Send the mail command
+        %opts=map { exists $host{$_} ? ($_ => $host{$_}) : () } @_mail_opts;
+        $smtp->mail($host{from},%opts ? \%opts : ())
+            or ($error="SMTP mail() command failed: $!\n" . $smtp->message . "\n" ),next;
+
+        # Send the recipients command
+        @{$host{To}} or Carp::croak "send_by_smtp: nobody to send to for host $host{Host}?!\n";
+        %opts=map { exists $host{$_} ? ($_ => $host{$_}) : () } @_recip_opts;
+        $smtp->recipient(@{$host{To}},%opts ? \%opts : ())
+            or ($error="SMTP recipient() command failed: $!\n" . $smtp->message . "\n" ),next;
+
+        # Send the data
+        $smtp->data()
+            or ($error="SMTP data() command failed: $!\n" . $smtp->message . "\n" ),next;
+        $self->print_for_smtp($smtp);
+
+        # Finish the mail
+        $smtp->dataend()
+            or Carp::croak( "Net::CMD (Net::SMTP) DATAEND command failed.\n".
+                            "Last server message was:" . $smtp->message .
+                            "This probably represents a problem with newline encoding " );
+
+        # terminate the session
+        $smtp->quit;
+        last;
+    } continue {
+        push @badhosts,shift @$hosts;
+    }
+    push @$hosts,@badhosts;
+    Carp::croak $error if $error and @$hosts==1;
+    return !$error;
+}
+
 
 
 ### Provided by Andrew McRae. Version 0.2  anm  09Sep97
 ### Copyright 1997 Optimation New Zealand Ltd.
 ### May be modified/redistributed under the same terms as Perl.
 ### Aditional changes by Yves.
-sub send_by_smtp {
+### Until 3.01_03 this was send_by_smtp()
+sub send_by_smtp_simple {
     my ( $self, @args ) = @_;
 
     ### We need the "From:" and "To:" headers to pass to the SMTP mailer:
@@ -3072,7 +3264,7 @@ reliably:
     "Name, Full" <full.name@some.host.com>
 
 This last form is discouraged because SMTP must be able to get
-at the I<name> or I<name@domain> portion.
+at the I<name> or I<name@domain> portion. I<see note below.>
 
 B<Disclaimer:>
 MIME::Lite was never intended to be a Mail User Agent, so please
@@ -3082,6 +3274,12 @@ be fine.  If this is not feasible, then consider using MIME::Lite
 to I<prepare> your message only, and using Net::SMTP explicitly to
 I<send> your message.
 
+B<Note:>
+As of MIME::Lite v3.02 the mail name extraction routines have been
+beefed up considerably. Furthermore if Mail::Address if provided then
+name extraction is done using that. Accordingly the above advice is now
+less true than it once was. Funky email names I<should> work properly
+now. However the disclaimer remains. Patches welcome. :-)
 
 =head2 Formatting of headers delayed until print()
 
@@ -3348,7 +3546,7 @@ you provide.
 
 =head1 VERSION
 
-Version: 3.01_02 (Dev/Test Release)
+Version: 3.01_03 (Dev/Test Release)
 
 =head1 CHANGE LOG
 
