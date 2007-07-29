@@ -21,7 +21,7 @@ Create a single-part message:
                  Type     =>'image/gif',
                  Encoding =>'base64',
                  Path     =>'hellonurse.gif'
-		 );
+         );
 
 Create a multipart message (i.e., one with attachments):
 
@@ -32,17 +32,17 @@ Create a multipart message (i.e., one with attachments):
                  Cc      =>'some@other.com, some@more.com',
                  Subject =>'A message with 2 parts...',
                  Type    =>'multipart/mixed'
-		 );
+         );
 
     ### Add parts (each "attach" has same arguments as "new"):
     $msg->attach(Type     =>'TEXT',
                  Data     =>"Here's the GIF file you wanted"
-		 );
+         );
     $msg->attach(Type     =>'image/gif',
                  Path     =>'aaa000123.gif',
                  Filename =>'logo.gif',
-		 Disposition => 'attachment'
-		 );
+         Disposition => 'attachment'
+         );
 
 Output a message:
 
@@ -93,7 +93,7 @@ over this one.
                  Cc       =>'some@other.com, some@more.com',
                  Subject  =>'Helloooooo, nurse!',
                  Data     =>"How's it goin', eh?"
-		 );
+         );
 
 =head2 Create a simple message containing just an image
 
@@ -105,7 +105,7 @@ over this one.
                  Type     =>'image/gif',
                  Encoding =>'base64',
                  Path     =>'hellonurse.gif'
-		 );
+         );
 
 
 =head2 Create a multipart message
@@ -117,20 +117,20 @@ over this one.
                  Cc      =>'some@other.com, some@more.com',
                  Subject =>'A message with 2 parts...',
                  Type    =>'multipart/mixed'
-		 );
+         );
 
     ### Add the text message part:
     ### (Note that "attach" has same arguments as "new"):
     $msg->attach(Type     =>'TEXT',
                  Data     =>"Here's the GIF file you wanted"
-		 );
+         );
 
     ### Add the image part:
     $msg->attach(Type     =>'image/gif',
                  Path     =>'aaa000123.gif',
                  Filename =>'logo.gif',
-		 Disposition => 'attachment'
-		 );
+         Disposition => 'attachment'
+         );
 
 
 =head2 Attach a GIF to a text message
@@ -341,7 +341,7 @@ use vars qw(
 #==============================
 #
 # GLOBALS, EXTERNAL/CONFIGURATION...
-$VERSION = "3.01_01";
+$VERSION = "3.01_02";
 
 ### Automatically interpret CC/BCC for SMTP:
 $AUTO_CC = 1;
@@ -472,61 +472,64 @@ sub is_mime_field {
 
 #------------------------------
 #
-# extract_addrs STRING
+# extract_full_addrs STRING
+# extract_only_addrs STRING
 #
 # Split STRING into an array of email addresses: somewhat of a KLUDGE.
 #
 # Unless paranoid, we try to load the real code before supplying our own.
+BEGIN {
+	my $ATOM      = '[^ \000-\037()<>@,;:\134"\056\133\135]+';
+	my $QSTR      = '".*?"';
+	my $WORD      = '(?:' . $QSTR . '|' . $ATOM . ')';
+	my $DOMAIN    = '(?:' . $ATOM . '(?:' . '\\.' . $ATOM . ')*' . ')';
+	my $LOCALPART = '(?:' . $WORD . '(?:' . '\\.' . $WORD . ')*' . ')';
+	my $ADDR      = '(?:' . $LOCALPART . '@' . $DOMAIN . ')';
+	my $PHRASE    = '(?:' . $WORD . ')+';
+	my $SEP       = "(?:^\\s*|\\s*,\\s*)";                                ### before elems in a list
 
-my $ATOM      = '[^ \000-\037()<>@,;:\134"\056\133\135]+';
-my $QSTR      = '".*?"';
-my $WORD      = '(?:' . $QSTR . '|' . $ATOM . ')';
-my $DOMAIN    = '(?:' . $ATOM . '(?:' . '\\.' . $ATOM . ')*' . ')';
-my $LOCALPART = '(?:' . $WORD . '(?:' . '\\.' . $WORD . ')*' . ')';
-my $ADDR      = '(?:' . $LOCALPART . '@' . $DOMAIN . ')';
-my $PHRASE    = '(?:' . $WORD . ')+';
-my $SEP       = "(?:^\\s*|\\s*,\\s*)";                                ### before elems in a list
+	sub my_extract_full_addrs {
+	    my $str = shift;
+	    my @addrs;
+	    $str =~ s/\s/ /g;                                                 ### collapse whitespace
 
-sub my_extract_addrs {
-    my $str = shift;
-    my @addrs;
-    $str =~ s/\s/ /g;                                                 ### collapse whitespace
-
-    pos($str) = 0;
-    while ( $str !~ m{\G\s*\Z}gco ) {
-		### print STDERR "TACKLING: ".substr($str, pos($str))."\n";
-		if    ( $str =~ m{\G$SEP$PHRASE\s*<\s*($ADDR)\s*>}gco ) { push @addrs, $1 }
-		elsif ( $str =~ m{\G$SEP($ADDR)}gco )                   { push @addrs, $1 }
-		elsif ( $str =~ m{\G$SEP($ATOM)}gco )                   { push @addrs, $1 }
-		else {
-			my $problem = substr( $str, pos($str) );
-			die "can't extract address at <$problem> in <$str>\n";
-		}
-    }
-    return @addrs;
+	    pos($str) = 0;
+	    while ( $str !~ m{\G\s*\Z}gco ) {
+			### print STDERR "TACKLING: ".substr($str, pos($str))."\n";
+			if ( $str =~ m{\G$SEP($PHRASE)\s*<\s*($ADDR)\s*>}gco ) {
+				push @addrs, "$1 <$2>" }
+			elsif ( $str =~ m{\G$SEP($ADDR)}gco or $str =~ m{\G$SEP($ATOM)}gco ) {
+				push @addrs, $1
+			}else {
+				my $problem = substr( $str, pos($str) );
+				die "can't extract address at <$problem> in <$str>\n";
+			}
+	    }
+	    return @addrs;
+	}
+	sub my_extract_only_addrs {
+			return map { /<([^>]+)>/ ? $1 : $_ } my_extract_full_addrs(@_);
+	}
 }
+#------------------------------
 
-if ( eval "require Mail::Address" ) {
+
+if ( !$PARANOID and eval "require Mail::Address" ) {
     push @Uses, "A$Mail::Address::VERSION";
     eval q{
-		sub extract_addrs {
+		sub extract_full_addrs {
 	    	return map { $_->format } Mail::Address->parse($_[0]);
 		}
-		sub extract_emails {
+		sub extract_only_addrs {
 			return map { $_->address } Mail::Address->parse($_[0]);
 		}
     };    ### q
 } else {
     eval q{
-        sub extract_addrs {
-	    	return my_extract_addrs(@_);
-		}
-	sub extract_emails {
-		return map { /(<[^>]+>)/ ? $1 : $_ } my_extract_addrs(@_);
-	}
+        *extract_full_addrs=*my_extract_full_addrs;
+        *extract_only_addrs=*my_extract_only_addrs;
     };    ### q
 }    ### if
-
 
 #==============================
 #==============================
@@ -545,25 +548,25 @@ if ( !$PARANOID and eval "require MIME::Base64" ) {
     push @Uses, "B$MIME::Base64::VERSION";
 } else {
     eval q{
-		sub encode_base64 {
-		    my $res = "";
-		    my $eol = "\n";
+        sub encode_base64 {
+            my $res = "";
+            my $eol = "\n";
 
-		    pos($_[0]) = 0;        ### thanks, Andreas!
-		    while ($_[0] =~ /(.{1,45})/gs) {
-			$res .= substr(pack('u', $1), 1);
-			chop($res);
-		    }
-		    $res =~ tr|` -_|AA-Za-z0-9+/|;
+            pos($_[0]) = 0;        ### thanks, Andreas!
+            while ($_[0] =~ /(.{1,45})/gs) {
+            $res .= substr(pack('u', $1), 1);
+            chop($res);
+            }
+            $res =~ tr|` -_|AA-Za-z0-9+/|;
 
-		    ### Fix padding at the end:
-		    my $padding = (3 - length($_[0]) % 3) % 3;
-		    $res =~ s/.{$padding}$/'=' x $padding/e if $padding;
+            ### Fix padding at the end:
+            my $padding = (3 - length($_[0]) % 3) % 3;
+            $res =~ s/.{$padding}$/'=' x $padding/e if $padding;
 
-		    ### Break encoded string into lines of no more than 76 characters each:
-		    $res =~ s/(.{1,76})/$1$eol/g if (length $eol);
-		    return $res;
-		} ### sub
+            ### Break encoded string into lines of no more than 76 characters each:
+            $res =~ s/(.{1,76})/$1$eol/g if (length $eol);
+            return $res;
+        } ### sub
   }    ### q
 }    ### if
 
@@ -583,21 +586,21 @@ if ( !$PARANOID and eval "require MIME::QuotedPrint" ) {
     push @Uses, "Q$MIME::QuotedPrint::VERSION";
 } else {
     eval q{
-		sub encode_qp {
-		    my $res = shift;
-		    local($_);
-		    $res =~ s/([^ \t\n!-<>-~])/sprintf("=%02X", ord($1))/eg;  ### rule #2,#3
-		    $res =~ s/([ \t]+)$/
-		      join('', map { sprintf("=%02X", ord($_)) }
-			           split('', $1)
-		      )/egm;                        ### rule #3 (encode whitespace at eol)
+        sub encode_qp {
+            my $res = shift;
+            local($_);
+            $res =~ s/([^ \t\n!-<>-~])/sprintf("=%02X", ord($1))/eg;  ### rule #2,#3
+            $res =~ s/([ \t]+)$/
+              join('', map { sprintf("=%02X", ord($_)) }
+                       split('', $1)
+              )/egm;                        ### rule #3 (encode whitespace at eol)
 
-		    ### rule #5 (lines shorter than 76 chars, but can't break =XX escapes:
-		    my $brokenlines = "";
-		    $brokenlines .= "$1=\n" while $res =~ s/^(.{70}([^=]{2})?)//; ### 70 was 74
-		    $brokenlines =~ s/=\n$// unless length $res;
-		    "$brokenlines$res";
-		} ### sub
+            ### rule #5 (lines shorter than 76 chars, but can't break =XX escapes:
+            my $brokenlines = "";
+            $brokenlines .= "$1=\n" while $res =~ s/^(.{70}([^=]{2})?)//; ### 70 was 74
+            $brokenlines =~ s/=\n$// unless length $res;
+            "$brokenlines$res";
+        } ### sub
   }    ### q
 }    ### if
 
@@ -657,9 +660,9 @@ sub new {
 
     ### Create basic object:
     my $self = {
-		Attrs  => {},    ### MIME attributes
-		Header => [],    ### explicit message headers
-		Parts  => [],    ### array of parts
+        Attrs  => {},    ### MIME attributes
+        Header => [],    ### explicit message headers
+        Parts  => [],    ### array of parts
     };
     bless $self, $class;
 
@@ -720,31 +723,31 @@ sub attach {
 
     ### Create new part, if necessary:
     my $part1 = (
-		( @_ == 1 ) ? shift : ref($self)->new( Top => 0, @_)
+        ( @_ == 1 ) ? shift : ref($self)->new( Top => 0, @_)
     );
 
     ### Do the "attach-to-singlepart" hack:
     if ( $self->attr('content-type') !~ m{^(multipart|message)/}i ) {
 
-		### Create part zero:
-		my $part0 = ref($self)->new;
+        ### Create part zero:
+        my $part0 = ref($self)->new;
 
-		### Cut MIME stuff from self, and paste into part zero:
-		foreach (qw(Attrs Data Path FH)) {
-			$part0->{$_} = $self->{$_};
-			delete( $self->{$_} );
-		}
-		$part0->top_level(0);    ### clear top-level attributes
+        ### Cut MIME stuff from self, and paste into part zero:
+        foreach (qw(Attrs Data Path FH)) {
+            $part0->{$_} = $self->{$_};
+            delete( $self->{$_} );
+        }
+        $part0->top_level(0);    ### clear top-level attributes
 
-		### Make self a top-level multipart:
-		$self->{Attrs} ||= {};    ### reset
-		$self->attr( 'content-type'              => 'multipart/mixed' );
-		$self->attr( 'content-type.boundary'     => gen_boundary() );
-		$self->attr( 'content-transfer-encoding' => '7bit' );
-		$self->top_level(1);      ### activate top-level attributes
+        ### Make self a top-level multipart:
+        $self->{Attrs} ||= {};    ### reset
+        $self->attr( 'content-type'              => 'multipart/mixed' );
+        $self->attr( 'content-type.boundary'     => gen_boundary() );
+        $self->attr( 'content-transfer-encoding' => '7bit' );
+        $self->top_level(1);      ### activate top-level attributes
 
-		### Add part 0:
-		push @{ $self->{Parts} }, $part0;
+        ### Add part 0:
+        push @{ $self->{Parts} }, $part0;
     }
 
     ### Add the new part:
@@ -954,7 +957,7 @@ sub build {
 
     ### Miko's note: reorganized to check for exactly one of Data, Path, or FH
     ( defined( $params{Data} ) + defined( $params{Path} ) + defined( $params{FH} ) <= 1 )
-		or Carp::croak "supply exactly zero or one of (Data|Path|FH).\n";
+        or Carp::croak "supply exactly zero or one of (Data|Path|FH).\n";
 
     ### Create new instance, if necessary:
     ref($self) or $self = $self->new;
@@ -980,17 +983,17 @@ sub build {
 
     ### Add in the multipart boundary:
     if ($is_multipart) {
-		my $boundary = gen_boundary();
-		$self->attr( 'content-type.boundary' => $boundary );
+        my $boundary = gen_boundary();
+        $self->attr( 'content-type.boundary' => $boundary );
     }
 
 
     ### CONTENT-ID...
     ###
     if ( defined $params{Id} ) {
-    	my $id=$params{Id};
-    	$id="<$id>" unless $id=~/\A\s*<.*>\s*\z/;
-    	$self->attr( 'content-id' => $id )
+        my $id=$params{Id};
+        $id="<$id>" unless $id=~/\A\s*<.*>\s*\z/;
+        $self->attr( 'content-id' => $id )
     }
 
 
@@ -1001,18 +1004,18 @@ sub build {
     ### Get data, as...
     ### ...either literal data:
     if ( defined( $params{Data} ) ) {
-		$self->data( $params{Data} );
+        $self->data( $params{Data} );
     }
     ### ...or a path to data:
     elsif ( defined( $params{Path} ) ) {
-		$self->path( $params{Path} );    ### also sets filename
-		$self->read_now if $params{ReadNow};
+        $self->path( $params{Path} );    ### also sets filename
+        $self->read_now if $params{ReadNow};
     }
     ### ...or a filehandle to data:
     ### Miko's note: this part works much like the path routine just above,
     elsif ( defined( $params{FH} ) ) {
-		$self->fh( $params{FH} );
-		$self->read_now if $params{ReadNow};    ### implement later
+        $self->fh( $params{FH} );
+        $self->read_now if $params{ReadNow};    ### implement later
     }
 
 
@@ -1020,7 +1023,7 @@ sub build {
     ###    Need this to make sure the filename is added.  The Filename
     ###    attribute is ignored, otherwise.
     if ( defined( $params{Filename} ) ) {
-		$self->filename( $params{Filename} );
+        $self->filename( $params{Filename} );
     }
 
 
@@ -1029,13 +1032,13 @@ sub build {
 
     ### Get it:
     my $enc =
-		( $params{Encoding} || ( $AUTO_ENCODE and $self->suggest_encoding($type) ) || 'binary' );
+        ( $params{Encoding} || ( $AUTO_ENCODE and $self->suggest_encoding($type) ) || 'binary' );
     $self->attr( 'content-transfer-encoding' => lc($enc) );
 
     ### Sanity check:
     if ( $type =~ m{^(multipart|message)/} ) {
-		( $enc =~ m{^(7bit|8bit|binary)\Z} )
-			or Carp::croak( "illegal MIME: " . "can't have encoding $enc with type $type\n" );
+        ( $enc =~ m{^(7bit|8bit|binary)\Z} )
+            or Carp::croak( "illegal MIME: " . "can't have encoding $enc with type $type\n" );
     }
 
     ### CONTENT-DISPOSITION...
@@ -1048,9 +1051,9 @@ sub build {
     ###
     my $length;
     if ( exists( $params{Length} ) ) {    ### given by caller:
-		$self->attr( 'content-length' => $params{Length} );
+        $self->attr( 'content-length' => $params{Length} );
     } else {                              ### compute it ourselves
-		$self->get_length;
+        $self->get_length;
     }
 
     ### Init the top-level fields:
@@ -1061,40 +1064,40 @@ sub build {
     my $ds_wanted = $params{Datestamp};
     my $ds_defaulted = ( $is_top and !exists( $params{Datestamp} ) );
     if ( ( $ds_wanted or $ds_defaulted ) and !exists( $params{Date} ) ) {
-		# Updated to use local time and numeric offset per RFC 2822
-		# Calculate offset from UTC
-		use Time::Local;  # ships w/ Perl so should be OK to assume presence
-		my $t0 = timegm (0,0,0,2,0,70);       # one day from epoch
-		my $t1 = timelocal (0,0,0,2,0,70);
-		my $offset = $t0 - $t1;
-		my $offset_hrs = int ($offset / 3600);
-		my $offset_min = int ($offset / 60) - $offset_hrs * 60;
-		my $offset_str = sprintf "%+.2d%02d", $offset_hrs, $offset_min;
-		my ($u_wdy, $u_mon, $u_mdy, $u_time, $u_y4) =
-		    split /\s+/, localtime()."";   ### should be non-locale-dependent
-		my $date = "$u_wdy, $u_mdy $u_mon $u_y4 $u_time $offset_str";
-		$self->add( "date", $date );
+        # Updated to use local time and numeric offset per RFC 2822
+        # Calculate offset from UTC
+        use Time::Local;  # ships w/ Perl so should be OK to assume presence
+        my $t0 = timegm (0,0,0,2,0,70);       # one day from epoch
+        my $t1 = timelocal (0,0,0,2,0,70);
+        my $offset = $t0 - $t1;
+        my $offset_hrs = int ($offset / 3600);
+        my $offset_min = int ($offset / 60) - $offset_hrs * 60;
+        my $offset_str = sprintf "%+.2d%02d", $offset_hrs, $offset_min;
+        my ($u_wdy, $u_mon, $u_mdy, $u_time, $u_y4) =
+            split /\s+/, localtime()."";   ### should be non-locale-dependent
+        my $date = "$u_wdy, $u_mdy $u_mon $u_y4 $u_time $offset_str";
+        $self->add( "date", $date );
     }
 
     ### Set message headers:
     my @paramz = @params;
     my $field;
     while (@paramz) {
-		my ( $tag, $value ) = ( shift (@paramz), shift (@paramz) );
+        my ( $tag, $value ) = ( shift (@paramz), shift (@paramz) );
 
-		### Get tag, if a tag:
-		if ( $tag =~ /^-(.*)/ ) {          ### old style, backwards-compatibility
-			$field = lc($1);
-		} elsif ( $tag =~ /^(.*):$/ ) {    ### new style
-			$field = lc($1);
-		} elsif ( known_field( $field = lc($tag) ) ) {    ### known field
-			### no-op
-		} else {                                          ### not a field:
-			next;
-		}
+        ### Get tag, if a tag:
+        if ( $tag =~ /^-(.*)/ ) {          ### old style, backwards-compatibility
+            $field = lc($1);
+        } elsif ( $tag =~ /^(.*):$/ ) {    ### new style
+            $field = lc($1);
+        } elsif ( known_field( $field = lc($tag) ) ) {    ### known field
+            ### no-op
+        } else {                                          ### not a field:
+            next;
+        }
 
-		### Add it:
-		$self->add( $field, $value );
+        ### Add it:
+        $self->add( $field, $value );
     }
 
     ### Done!
@@ -1126,13 +1129,13 @@ sub build {
 sub top_level {
     my ( $self, $onoff ) = @_;
     if ($onoff) {
-		$self->attr( 'MIME-Version' => '1.0' );
-		my $uses = ( @Uses ? ( "(" . join ( "; ", @Uses ) . ")" ) : '' );
-		$self->replace( 'X-Mailer' => "MIME::Lite $VERSION $uses" )
-			unless $VANILLA;
+        $self->attr( 'MIME-Version' => '1.0' );
+        my $uses = ( @Uses ? ( "(" . join ( "; ", @Uses ) . ")" ) : '' );
+        $self->replace( 'X-Mailer' => "MIME::Lite $VERSION $uses" )
+            unless $VANILLA;
     } else {
-		$self->attr( 'MIME-Version' => undef );
-		$self->delete('X-Mailer');
+        $self->attr( 'MIME-Version' => undef );
+        $self->delete('X-Mailer');
     }
 }
 
@@ -1179,20 +1182,20 @@ sub add {
 
     ### If a dangerous option, warn them:
     Carp::carp "Explicitly setting a MIME header field ($tag) is dangerous:\n"
-		. "use the attr() method instead.\n"
-		if ( is_mime_field($tag) && !$QUIET );
+        . "use the attr() method instead.\n"
+        if ( is_mime_field($tag) && !$QUIET );
 
     ### Get array of clean values:
     my @vals = (
-		( ref($value) and ( ref($value) eq 'ARRAY' ) )
-		? @{$value}
-		: ( $value . '' )
+        ( ref($value) and ( ref($value) eq 'ARRAY' ) )
+        ? @{$value}
+        : ( $value . '' )
     );
     map { s/\n/\n /g } @vals;
 
     ### Add them:
     foreach (@vals) {
-		push @{ $self->{Header} }, [ $tag, $_ ];
+        push @{ $self->{Header} }, [ $tag, $_ ];
     }
 }
 
@@ -1237,12 +1240,12 @@ sub attr {
 
     ### Set or get?
     if ( @_ > 2 ) {    ### set:
-		$self->{Attrs}{$tag} ||= {};    ### force hash
-		delete $self->{Attrs}{$tag}{$subtag};    ### delete first
-		if ( defined($value) ) {                 ### set...
-			$value =~ s/[\r\n]//g;               ### make clean
-			$self->{Attrs}{$tag}{$subtag} = $value;
-		}
+        $self->{Attrs}{$tag} ||= {};    ### force hash
+        delete $self->{Attrs}{$tag}{$subtag};    ### delete first
+        if ( defined($value) ) {                 ### set...
+            $value =~ s/[\r\n]//g;               ### make clean
+            $self->{Attrs}{$tag}{$subtag} = $value;
+        }
     }
 
     ### Return current value:
@@ -1278,7 +1281,7 @@ sub delete {
     my $hdr = [];
     my $field;
     foreach $field ( @{ $self->{Header} } ) {
-		push @$hdr, $field if ( $field->[0] ne $tag );
+        push @$hdr, $field if ( $field->[0] ne $tag );
     }
     $self->{Header} = $hdr;
     $self;
@@ -1308,9 +1311,9 @@ In either case, supply the empty array to restore the default ordering.
 sub field_order {
     my $self = shift;
     if ( ref($self) ) {
-		$self->{FieldOrder} = [ map { lc($_) } @_ ];
+        $self->{FieldOrder} = [ map { lc($_) } @_ ];
     } else {
-		@FieldOrder = map { lc($_) } @_;
+        @FieldOrder = map { lc($_) } @_;
     }
 }
 
@@ -1352,28 +1355,28 @@ sub fields {
     my $tag;
     foreach $tag ( sort keys %{ $self->{Attrs} } ) {
 
-		### Skip if explicit:
-		next if ( $explicit{$tag} );
+        ### Skip if explicit:
+        next if ( $explicit{$tag} );
 
-		### Skip if no subtags:
-		my @subtags = keys %{ $self->{Attrs}{$tag} };
-		@subtags or next;
+        ### Skip if no subtags:
+        my @subtags = keys %{ $self->{Attrs}{$tag} };
+        @subtags or next;
 
-		### Create string:
-		my $value;
-		defined( $value = $self->{Attrs}{$tag}{''} ) or next;    ### need default
-		foreach ( sort @subtags ) {
-			next if ( $_ eq '' );
-			$value .= qq{; $_="$self->{Attrs}{$tag}{$_}"};
-		}
+        ### Create string:
+        my $value;
+        defined( $value = $self->{Attrs}{$tag}{''} ) or next;    ### need default
+        foreach ( sort @subtags ) {
+            next if ( $_ eq '' );
+            $value .= qq{; $_="$self->{Attrs}{$tag}{$_}"};
+        }
 
-		### Add to running fields;
-		push @fields, [ $tag, $value ];
+        ### Add to running fields;
+        push @fields, [ $tag, $value ];
     }
 
     ### Add remaining fields (note that we duplicate the array for safety):
     foreach ( @{ $self->{Header} } ) {
-		push @fields, [ @{$_} ];
+        push @fields, [ @{$_} ];
     }
 
     ### Final step:
@@ -1384,24 +1387,24 @@ sub fields {
     @order or @order = @FieldOrder;                ### no? maybe generic
     if (@order) {                                  ### either?
 
-		### Create hash mapping field names to 1-based rank:
-		my %rank = map { $order[$_] => ( 1 + $_ ) } ( 0 .. $#order );
+        ### Create hash mapping field names to 1-based rank:
+        my %rank = map { $order[$_] => ( 1 + $_ ) } ( 0 .. $#order );
 
-		### Create parallel array to @fields, called @ranked.
-		### It contains fields tagged with numbers like 2003, where the
-		### 3 is the original 0-based position, and 2000 indicates that
-		### we wanted ths type of field to go second.
-		my @ranked = map {
-			[ ( $_ + 1000 * ( $rank{ lc( $fields[$_][0] ) } || ( 2 + $#order ) ) ), $fields[$_] ]
-		} ( 0 .. $#fields );
+        ### Create parallel array to @fields, called @ranked.
+        ### It contains fields tagged with numbers like 2003, where the
+        ### 3 is the original 0-based position, and 2000 indicates that
+        ### we wanted ths type of field to go second.
+        my @ranked = map {
+            [ ( $_ + 1000 * ( $rank{ lc( $fields[$_][0] ) } || ( 2 + $#order ) ) ), $fields[$_] ]
+        } ( 0 .. $#fields );
 
-		# foreach (@ranked) {
-		#     print STDERR "RANKED: $_->[0] $_->[1][0] $_->[1][1]\n";
-		# }
+        # foreach (@ranked) {
+        #     print STDERR "RANKED: $_->[0] $_->[1][0] $_->[1][1]\n";
+        # }
 
-		### That was half the Schwartzian transform.  Here's the rest:
-		@fields = map { $_->[1] }
-			sort { $a->[0] <=> $b->[0] } @ranked;
+        ### That was half the Schwartzian transform.  Here's the rest:
+        @fields = map { $_->[1] }
+            sort { $a->[0] <=> $b->[0] } @ranked;
     }
 
     ### Done!
@@ -1426,8 +1429,8 @@ content-disposition.
 sub filename {
     my ( $self, $filename ) = @_;
     if ( @_ > 1 ) {
-		$self->attr( 'content-type.name'            => $filename );
-		$self->attr( 'content-disposition.filename' => $filename );
+        $self->attr( 'content-type.name'            => $filename );
+        $self->attr( 'content-disposition.filename' => $filename );
     }
     $self->attr('content-disposition.filename');
 }
@@ -1507,13 +1510,13 @@ sub get_length {
     my $enc = lc( $self->attr('content-transfer-encoding') || 'binary' );
     my $length;
     if ( !$is_multipart && ( $enc eq "binary" ) ) {    ### might figure it out cheap:
-		if ( defined( $self->{Data} ) ) {              ### it's in core
-			$length = length( $self->{Data} );
-		} elsif ( defined( $self->{FH} ) ) {           ### it's in a filehandle
-			### no-op: it's expensive, so don't bother
-		} elsif ( defined( $self->{Path} ) ) {         ### it's a simple file!
-			$length = ( -s $self->{Path} ) if ( -e $self->{Path} );
-		}
+        if ( defined( $self->{Data} ) ) {              ### it's in core
+            $length = length( $self->{Data} );
+        } elsif ( defined( $self->{FH} ) ) {           ### it's in a filehandle
+            ### no-op: it's expensive, so don't bother
+        } elsif ( defined( $self->{Path} ) ) {         ### it's a simple file!
+            $length = ( -s $self->{Path} ) if ( -e $self->{Path} );
+        }
     }
     $self->attr( 'content-length' => $length );
     return $length;
@@ -1637,34 +1640,34 @@ sub scrub {
     ### Scrub me:
     if ( !@a ) {    ### guess
 
-		### Scrub length always:
-		$self->replace( 'content-length', '' );
+        ### Scrub length always:
+        $self->replace( 'content-length', '' );
 
-		### Scrub disposition if no filename, or if content-type has same info:
-		if ( !$self->_safe_attr('content-disposition.filename')
-			|| $self->_safe_attr('content-type.name') )
-		{
-			$self->replace( 'content-disposition', '' );
-		}
+        ### Scrub disposition if no filename, or if content-type has same info:
+        if ( !$self->_safe_attr('content-disposition.filename')
+            || $self->_safe_attr('content-type.name') )
+        {
+            $self->replace( 'content-disposition', '' );
+        }
 
-		### Scrub encoding if effectively unencoded:
-		if ( $self->_safe_attr('content-transfer-encoding') =~ /^(7bit|8bit|binary)$/i ) {
-			$self->replace( 'content-transfer-encoding', '' );
-		}
+        ### Scrub encoding if effectively unencoded:
+        if ( $self->_safe_attr('content-transfer-encoding') =~ /^(7bit|8bit|binary)$/i ) {
+            $self->replace( 'content-transfer-encoding', '' );
+        }
 
-		### Scrub charset if US-ASCII:
-		if ( $self->_safe_attr('content-type.charset') =~ /^(us-ascii)/i ) {
-			$self->attr( 'content-type.charset' => undef );
-		}
+        ### Scrub charset if US-ASCII:
+        if ( $self->_safe_attr('content-type.charset') =~ /^(us-ascii)/i ) {
+            $self->attr( 'content-type.charset' => undef );
+        }
 
-		### TBD: this is not really right for message/digest:
-		if ( ( keys %{ $self->{Attrs}{'content-type'} } == 1 )
-			and ( $self->_safe_attr('content-type') eq 'text/plain' ) )
-		{
-			$self->replace( 'content-type', '' );
-		}
+        ### TBD: this is not really right for message/digest:
+        if ( ( keys %{ $self->{Attrs}{'content-type'} } == 1 )
+            and ( $self->_safe_attr('content-type') eq 'text/plain' ) )
+        {
+            $self->replace( 'content-type', '' );
+        }
     } elsif ( $expl and ( ref($expl) eq 'ARRAY' ) ) {
-		foreach ( @{$expl} ) { $self->replace( $_, '' ); }
+        foreach ( @{$expl} ) { $self->replace( $_, '' ); }
     }
 
     ### Scrub my kids:
@@ -1709,9 +1712,9 @@ sub binmode {
     my $self = shift;
     $self->{Binmode} = shift if (@_);    ### argument? set override
     return (
-		defined( $self->{Binmode} )
-		? $self->{Binmode}
-		: ( $self->attr("content-type") !~ m{^(text|message)/}i )
+        defined( $self->{Binmode} )
+        ? $self->{Binmode}
+        : ( $self->attr("content-type") !~ m{^(text|message)/}i )
     );
 }
 
@@ -1733,8 +1736,8 @@ to be recomputed (possibly to nothing).
 sub data {
     my $self = shift;
     if (@_) {
-		$self->{Data} = ( ( ref( $_[0] ) eq 'ARRAY' ) ? join ( '', @{ $_[0] } ) : $_[0] );
-		$self->get_length;
+        $self->{Data} = ( ( ref( $_[0] ) eq 'ARRAY' ) ? join ( '', @{ $_[0] } ) : $_[0] );
+        $self->get_length;
     }
     $self->{Data};
 }
@@ -1777,25 +1780,25 @@ sub path {
     my $self = shift;
     if (@_) {
 
-		### Set the path, and invalidate the content length:
-		$self->{Path} = shift;
+        ### Set the path, and invalidate the content length:
+        $self->{Path} = shift;
 
-		### Re-set filename, extracting it from path if possible:
-		my $filename;
-		if ( $self->{Path} and ( $self->{Path} !~ /\|$/ ) ) {    ### non-shell path:
-			( $filename = $self->{Path} ) =~ s/^<//;
+        ### Re-set filename, extracting it from path if possible:
+        my $filename;
+        if ( $self->{Path} and ( $self->{Path} !~ /\|$/ ) ) {    ### non-shell path:
+            ( $filename = $self->{Path} ) =~ s/^<//;
 
-			### Consult File::Basename, maybe:
-			if ($HaveFileBasename) {
-				$filename = File::Basename::basename($filename);
-			} else {
-				($filename) = ( $filename =~ m{([^\/]+)\Z} );
-			}
-		}
-		$self->filename($filename);
+            ### Consult File::Basename, maybe:
+            if ($HaveFileBasename) {
+                $filename = File::Basename::basename($filename);
+            } else {
+                ($filename) = ( $filename =~ m{([^\/]+)\Z} );
+            }
+        }
+        $self->filename($filename);
 
-		### Reset the length:
-		$self->get_length;
+        ### Reset the length:
+        $self->get_length;
     }
     $self->{Path};
 }
@@ -1850,18 +1853,18 @@ sub read_now {
     local $/ = undef;
 
     if ( $self->{FH} ) {    ### data from a filehandle:
-		my $chunk;
-		my @chunks;
-		CORE::binmode( $self->{FH} ) if $self->binmode;
-		while ( read( $self->{FH}, $chunk, 1024 ) ) {
-			push @chunks, $chunk;
-		}
-		$self->{Data} = join '', @chunks;
+        my $chunk;
+        my @chunks;
+        CORE::binmode( $self->{FH} ) if $self->binmode;
+        while ( read( $self->{FH}, $chunk, 1024 ) ) {
+            push @chunks, $chunk;
+        }
+        $self->{Data} = join '', @chunks;
     } elsif ( $self->{Path} ) {    ### data from a path:
-		open SLURP, $self->{Path} or Carp::croak "open $self->{Path}: $!\n";
-		CORE::binmode(SLURP) if $self->binmode;
-		$self->{Data} = <SLURP>;    ### sssssssssssssslurp...
-		close SLURP;                ### ...aaaaaaaaahhh!
+        open SLURP, $self->{Path} or Carp::croak "open $self->{Path}: $!\n";
+        CORE::binmode(SLURP) if $self->binmode;
+        $self->{Data} = <SLURP>;    ### sssssssssssssslurp...
+        close SLURP;                ### ...aaaaaaaaahhh!
     }
 }
 
@@ -1908,10 +1911,10 @@ sub sign {
     ### Load signature:
     my $sig;
     if ( !defined( $sig = $params{Data} ) ) {    ### not given explicitly:
-		local $/ = undef;
-		open SIG, $params{Path} or Carp::croak "open sig $params{Path}: $!\n";
-		$sig = <SIG>;                            ### sssssssssssssslurp...
-		close SIG;                               ### ...aaaaaaaaahhh!
+        local $/ = undef;
+        open SIG, $params{Path} or Carp::croak "open sig $params{Path}: $!\n";
+        $sig = <SIG>;                            ### sssssssssssssslurp...
+        close SIG;                               ### ...aaaaaaaaahhh!
     }
     $sig = join ( '', @$sig ) if ( ref($sig) and ( ref($sig) eq 'ARRAY' ) );
 
@@ -1956,26 +1959,26 @@ sub suggest_encoding {
     ### Consult MIME::Types, maybe:
     if ($HaveMimeTypes) {
 
-		### Mappings contain [suffix,mimetype,encoding]
-		my @mappings = MIME::Types::by_mediatype($ctype);
-		if ( scalar(@mappings) ) {
-			### Just pick the first one:
-			my ( $suffix, $mimetype, $encoding ) = @{ $mappings[0] };
-			if ( $encoding
-				&& $encoding =~ /^(base64|binary|[78]bit|quoted-printable)$/i )
-			{
-				return lc($encoding);    ### sanity check
-			}
-		}
+        ### Mappings contain [suffix,mimetype,encoding]
+        my @mappings = MIME::Types::by_mediatype($ctype);
+        if ( scalar(@mappings) ) {
+            ### Just pick the first one:
+            my ( $suffix, $mimetype, $encoding ) = @{ $mappings[0] };
+            if ( $encoding
+                && $encoding =~ /^(base64|binary|[78]bit|quoted-printable)$/i )
+            {
+                return lc($encoding);    ### sanity check
+            }
+        }
     }
 
     ### If we got here, then MIME::Types was no help.
     ### Extract major type:
     my ($type) = split '/', $ctype;
     if ( ( $type eq 'text' ) || ( $type eq 'message' ) ) {    ### scan message body?
-		return 'binary';
+        return 'binary';
     } else {
-		return ( $type eq 'multipart' ) ? 'binary' : 'base64';
+        return ( $type eq 'multipart' ) ? 'binary' : 'base64';
     }
 }
 
@@ -1997,9 +2000,9 @@ sub suggest_type {
     ### Consult MIME::Types, maybe:
     if ($HaveMimeTypes) {
 
-		# Mappings contain [mimetype,encoding]:
-		my ( $mimetype, $encoding ) = MIME::Types::by_suffix($path);
-		return $mimetype if ( $mimetype && $mimetype =~ /^\S+\/\S+$/ );    ### sanity check
+        # Mappings contain [mimetype,encoding]:
+        my ( $mimetype, $encoding ) = MIME::Types::by_suffix($path);
+        return $mimetype if ( $mimetype && $mimetype =~ /^\S+\/\S+$/ );    ### sanity check
     }
     ### If we got here, then MIME::Types was no help.
     ### The correct thing to fall back to is the most-generic content type:
@@ -2025,8 +2028,8 @@ sub verify_data {
     ### Verify self:
     my $path = $self->{Path};
     if ( $path and ( $path !~ /\|$/ ) ) {    ### non-shell path:
-		$path =~ s/^<//;
-		( -r $path ) or die "$path: not readable\n";
+        $path =~ s/^<//;
+        ( -r $path ) or die "$path: not readable\n";
     }
 
     ### Verify parts:
@@ -2132,33 +2135,33 @@ sub print_body {
     ###   accidents that way, since the syntax will always match the MIME type.
     my $type = $self->attr('content-type');
     if ( $type =~ m{^multipart/}i ) {
-		my $boundary = $self->attr('content-type.boundary');
+        my $boundary = $self->attr('content-type.boundary');
 
-		### Preamble:
-		$out->print(
-			defined( $self->{Preamble} )
-			? $self->{Preamble}
-			: "This is a multi-part message in MIME format.\n"
-		);
+        ### Preamble:
+        $out->print(
+            defined( $self->{Preamble} )
+            ? $self->{Preamble}
+            : "This is a multi-part message in MIME format.\n"
+        );
 
-		### Parts:
-		my $part;
-		foreach $part ( @{ $self->{Parts} } ) {
-			$out->print("\n--$boundary\n");
-			$part->print($out);
-		}
+        ### Parts:
+        my $part;
+        foreach $part ( @{ $self->{Parts} } ) {
+            $out->print("\n--$boundary\n");
+            $part->print($out);
+        }
 
-		### Epilogue:
-		$out->print("\n--$boundary--\n\n");
+        ### Epilogue:
+        $out->print("\n--$boundary--\n\n");
     } elsif ( $type =~ m{^message/} ) {
-		my @parts = @{ $self->{Parts} };
+        my @parts = @{ $self->{Parts} };
 
-		### It's a toss-up; try both data and parts:
-		if    ( @parts == 0 ) { $self->print_simple_body($out,$is_smtp) }
-		elsif ( @parts == 1 ) { $parts[0]->print($out) }
-		else { Carp::croak "can't handle message with >1 part\n"; }
+        ### It's a toss-up; try both data and parts:
+        if    ( @parts == 0 ) { $self->print_simple_body($out,$is_smtp) }
+        elsif ( @parts == 1 ) { $parts[0]->print($out) }
+        else { Carp::croak "can't handle message with >1 part\n"; }
     } else {
-		$self->print_simple_body($out,$is_smtp);
+        $self->print_simple_body($out,$is_smtp);
     }
     1;
 }
@@ -2199,39 +2202,39 @@ sub print_simple_body {
 
     ### Is the data in-core?  If so, blit it out...
     if ( defined( $self->{Data} ) ) {
-		DATA:
-		{
-			local $_ = $encoding;
+        DATA:
+        {
+            local $_ = $encoding;
 
-			/^BINARY$/ and do {
-				$is_smtp and $self->{Data}=~s/(?!\r)\n\z/\r/;
-				$out->print( $self->{Data} );
-				last DATA;
-			};
-			/^8BIT$/ and do {
-				$out->print( encode_8bit( $self->{Data} ) );
-				last DATA;
-			};
-			/^7BIT$/ and do {
-				$out->print( encode_7bit( $self->{Data} ) );
-				last DATA;
-			};
-			/^QUOTED-PRINTABLE$/ and do {
-				### UNTAINT since m//mg on tainted data loops forever:
-				my ($untainted) = ( $self->{Data} =~ m/\A(.*)\Z/s );
+            /^BINARY$/ and do {
+                $is_smtp and $self->{Data}=~s/(?!\r)\n\z/\r/;
+                $out->print( $self->{Data} );
+                last DATA;
+            };
+            /^8BIT$/ and do {
+                $out->print( encode_8bit( $self->{Data} ) );
+                last DATA;
+            };
+            /^7BIT$/ and do {
+                $out->print( encode_7bit( $self->{Data} ) );
+                last DATA;
+            };
+            /^QUOTED-PRINTABLE$/ and do {
+                ### UNTAINT since m//mg on tainted data loops forever:
+                my ($untainted) = ( $self->{Data} =~ m/\A(.*)\Z/s );
 
-				### Encode it line by line:
-				while ( $untainted =~ m{^(.*[\r\n]*)}smg ) {
-					$out->print( encode_qp($1) );    ### have to do it line by line...
-				}
-				last DATA;
-			};
-			/^BASE64/ and do {
-				$out->print( encode_base64( $self->{Data} ) );
-				last DATA;
-			};
-			Carp::croak "unsupported encoding: `$_'\n";
-		}
+                ### Encode it line by line:
+                while ( $untainted =~ m{^(.*[\r\n]*)}smg ) {
+                    $out->print( encode_qp($1) );    ### have to do it line by line...
+                }
+                last DATA;
+            };
+            /^BASE64/ and do {
+                $out->print( encode_base64( $self->{Data} ) );
+                last DATA;
+            };
+            Carp::croak "unsupported encoding: `$_'\n";
+        }
     }
 
     ### Else, is the data in a file?  If so, output piecemeal...
@@ -2239,61 +2242,61 @@ sub print_simple_body {
     ###    or a filehandle. the only difference in behaviour is that it does
     ###    not attempt to open anything if it already has a filehandle
     elsif ( defined( $self->{Path} ) || defined( $self->{FH} ) ) {
-		no strict 'refs';    ### in case FH is not an object
-		my $DATA;
+        no strict 'refs';    ### in case FH is not an object
+        my $DATA;
 
-		### Open file if necessary:
-		if ( defined( $self->{Path} ) ) {
-			$DATA = new FileHandle || Carp::croak "can't get new filehandle\n";
-			$DATA->open("$self->{Path}")
-				or Carp::croak "open $self->{Path}: $!\n";
-		} else {
-			$DATA = $self->{FH};
-		}
-		CORE::binmode($DATA) if $self->binmode;
+        ### Open file if necessary:
+        if ( defined( $self->{Path} ) ) {
+            $DATA = new FileHandle || Carp::croak "can't get new filehandle\n";
+            $DATA->open("$self->{Path}")
+                or Carp::croak "open $self->{Path}: $!\n";
+        } else {
+            $DATA = $self->{FH};
+        }
+        CORE::binmode($DATA) if $self->binmode;
 
-		### Encode piece by piece:
-		PATH:
-		{
-			local $_ = $encoding;
+        ### Encode piece by piece:
+        PATH:
+        {
+            local $_ = $encoding;
 
-			/^BINARY$/ and do {
-				my $last="";
-				while (read( $DATA, $_, 2048 )) {
-					$out->print($last) if length $last;
-					$last=$_;
-				}
-				if (length $last) {
-					$is_smtp and $last=~s/(?!\r)\n\z/\r/;
-					$out->print($last);
-				}
-				last PATH;
-			};
-			/^8BIT$/ and do {
-				$out->print( encode_8bit($_) ) while (<$DATA>);
-				last PATH;
-			};
-			/^7BIT$/ and do {
-				$out->print( encode_7bit($_) ) while (<$DATA>);
-				last PATH;
-			};
-			/^QUOTED-PRINTABLE$/ and do {
-				$out->print( encode_qp($_) ) while (<$DATA>);
-				last PATH;
-			};
-			/^BASE64$/ and do {
-				$out->print( encode_base64($_) ) while ( read( $DATA, $_, 45 ) );
-				last PATH;
-			};
-			Carp::croak "unsupported encoding: `$_'\n";
-		}
+            /^BINARY$/ and do {
+                my $last="";
+                while (read( $DATA, $_, 2048 )) {
+                    $out->print($last) if length $last;
+                    $last=$_;
+                }
+                if (length $last) {
+                    $is_smtp and $last=~s/(?!\r)\n\z/\r/;
+                    $out->print($last);
+                }
+                last PATH;
+            };
+            /^8BIT$/ and do {
+                $out->print( encode_8bit($_) ) while (<$DATA>);
+                last PATH;
+            };
+            /^7BIT$/ and do {
+                $out->print( encode_7bit($_) ) while (<$DATA>);
+                last PATH;
+            };
+            /^QUOTED-PRINTABLE$/ and do {
+                $out->print( encode_qp($_) ) while (<$DATA>);
+                last PATH;
+            };
+            /^BASE64$/ and do {
+                $out->print( encode_base64($_) ) while ( read( $DATA, $_, 45 ) );
+                last PATH;
+            };
+            Carp::croak "unsupported encoding: `$_'\n";
+        }
 
-		### Close file:
-		close $DATA if defined( $self->{Path} );
+        ### Close file:
+        close $DATA if defined( $self->{Path} );
     }
 
     else {
-		Carp::croak "no data in this part\n";
+        Carp::croak "no data in this part\n";
     }
     1;
 }
@@ -2379,11 +2382,11 @@ sub fields_as_string {
     my ( $self, $fields ) = @_;
     my @lines;
     foreach (@$fields) {
-		my ( $tag, $value ) = @$_;
-		next if ( $value eq '' );    ### skip empties
-		$tag =~ s/\b([a-z])/uc($1)/ge;    ### make pretty
-		$tag =~ s/^mime-/MIME-/ig;        ### even prettier
-		push @lines, "$tag: $value\n";
+        my ( $tag, $value ) = @$_;
+        next if ( $value eq '' );    ### skip empties
+        $tag =~ s/\b([a-z])/uc($1)/ge;    ### make pretty
+        $tag =~ s/^mime-/MIME-/ig;        ### even prettier
+        push @lines, "$tag: $value\n";
     }
     join '', @lines;
 }
@@ -2508,34 +2511,34 @@ All of your $msg-E<gt>send invocations will work as expected.
 
 sub send {
     my $self = shift;
-	my $meth = shift;
+    my $meth = shift;
 
     if ( ref($self) ) {    ### instance method:
-		my ( $method, @args );
-		if (@_) {          ### args; use them just this once
-			$method = 'send_by_' . $meth;
-			@args   = @_;
-		} else {           ### no args; use defaults
-			$method = "send_by_$Sender";
-			# FIXME??:
-			#if ($method eq 'send_by_sendmail') {
-			#	@args = ( $SenderArgs{$Sender} || [] );
-			#} else {
-				@args = @{ $SenderArgs{$Sender} || [] };
-			#}
-		}
-		$self->verify_data if $AUTO_VERIFY;    ### prevents missing parts!
-		Carp::croak "Unknown send method '$meth'" unless $self->can($method);
-		return $self->$method(@args);
+        my ( $method, @args );
+        if (@_) {          ### args; use them just this once
+            $method = 'send_by_' . $meth;
+            @args   = @_;
+        } else {           ### no args; use defaults
+            $method = "send_by_$Sender";
+            # FIXME??:
+            #if ($method eq 'send_by_sendmail') {
+            #   @args = ( $SenderArgs{$Sender} || [] );
+            #} else {
+                @args = @{ $SenderArgs{$Sender} || [] };
+            #}
+        }
+        $self->verify_data if $AUTO_VERIFY;    ### prevents missing parts!
+        Carp::croak "Unknown send method '$meth'" unless $self->can($method);
+        return $self->$method(@args);
     } else {                                   ### class method:
-		if (@_) {
-			my @old = ( $Sender, @{ $SenderArgs{$Sender} } );
-			$Sender = $meth;
-			$SenderArgs{$Sender} = [@_];       ### remaining args
-			return @old;
-		} else {
-			Carp::croak "class method send must have HOW... arguments\n";
-		}
+        if (@_) {
+            my @old = ( $Sender, @{ $SenderArgs{$Sender} } );
+            $Sender = $meth;
+            $SenderArgs{$Sender} = [@_];       ### remaining args
+            return @old;
+        } else {
+            Carp::croak "class method send must have HOW... arguments\n";
+        }
     }
 }
 
@@ -2611,44 +2614,44 @@ sub send_by_sendmail {
     my $self = shift;
 
     if ( @_ == 1 ) { # FIXME???: and !ref $_[0] ) {
-    		### Use the given command...
-		my $sendmailcmd = shift @_;
+            ### Use the given command...
+        my $sendmailcmd = shift @_;
 
-		### Do it:
-		open SENDMAIL, "|$sendmailcmd" or Carp::croak "open |$sendmailcmd: $!\n";
-		$self->print( \*SENDMAIL );
-		close SENDMAIL;
-		return ( ( $? >> 8 ) ? undef: 1 );
+        ### Do it:
+        open SENDMAIL, "|$sendmailcmd" or Carp::croak "open |$sendmailcmd: $!\n";
+        $self->print( \*SENDMAIL );
+        close SENDMAIL;
+        return ( ( $? >> 8 ) ? undef: 1 );
     } else {            ### Build the command...
-		my %p = map { ref $_ ? @$_ : $_ } @_;
-		$p{Sendmail} ||= $SENDMAIL;
+        my %p = map { ref $_ ? @$_ : $_ } @_;
+        $p{Sendmail} ||= $SENDMAIL;
 
-		### Start with the command and basic args:
-		my @cmd = ( $p{Sendmail}, @{ $p{BaseArgs} || [ '-t', '-oi', '-oem' ] } );
+        ### Start with the command and basic args:
+        my @cmd = ( $p{Sendmail}, @{ $p{BaseArgs} || [ '-t', '-oi', '-oem' ] } );
 
-		### See if we are forcibly setting the sender:
-		$p{SetSender} = 1 if defined( $p{FromSender} );
+        ### See if we are forcibly setting the sender:
+        $p{SetSender} = 1 if defined( $p{FromSender} );
 
-		### Add the -f argument, unless we're explicitly told NOT to:
-		unless ( exists( $p{SetSender} ) and !$p{SetSender} ) {
-			my $from = $p{FromSender} || ( $self->get('From') )[0];
-			if ($from) {
-				my ($from_addr) = extract_addrs($from);
-				push @cmd, "-f$from_addr" if $from_addr;
-			}
-		}
+        ### Add the -f argument, unless we're explicitly told NOT to:
+        unless ( exists( $p{SetSender} ) and !$p{SetSender} ) {
+            my $from = $p{FromSender} || ( $self->get('From') )[0];
+            if ($from) {
+                my ($from_addr) = extract_full_addrs($from);
+                push @cmd, "-f$from_addr" if $from_addr;
+            }
+        }
 
-		### Open the command in a taint-safe fashion:
-		my $pid = open SENDMAIL, "|-";
-		defined($pid) or die "open of pipe failed: $!\n";
-		if ( !$pid ) {    ### child
-			exec(@cmd) or die "can't exec $p{Sendmail}: $!\n";
-			### NOTREACHED
-		} else {          ### parent
-			$self->print( \*SENDMAIL );
-			close SENDMAIL || die "error closing $p{Sendmail}: $! (exit $?)\n";
-			return 1;
-		}
+        ### Open the command in a taint-safe fashion:
+        my $pid = open SENDMAIL, "|-";
+        defined($pid) or die "open of pipe failed: $!\n";
+        if ( !$pid ) {    ### child
+            exec(@cmd) or die "can't exec $p{Sendmail}: $!\n";
+            ### NOTREACHED
+        } else {          ### parent
+            $self->print( \*SENDMAIL );
+            close SENDMAIL || die "error closing $p{Sendmail}: $! (exit $?)\n";
+            return 1;
+        }
     }
 }
 
@@ -2681,7 +2684,7 @@ sub send_by_smtp {
     my $hdr = $self->fields();
 
     my $from_header=$self->get('From');
-    my ($from) = extract_emails( $from_header );
+    my ($from) = extract_only_addrs( $from_header );
 
     warn "M::L>>> $from_header => $from" if $MIME::Lite::DEBUG;
 
@@ -2692,32 +2695,32 @@ sub send_by_smtp {
     defined($to) or Carp::croak "send_by_smtp: missing 'To:' address\n";
 
     ### Get the destinations as a simple array of addresses:
-    my @to_all = extract_addrs($to);
+    my @to_all = extract_only_addrs($to);
     if ($AUTO_CC) {
-		foreach my $field (qw(Cc Bcc)) {
-			my $value = $self->get($field);
-			push @to_all, extract_addrs($value) if defined($value);
-		}
+        foreach my $field (qw(Cc Bcc)) {
+            my $value = $self->get($field);
+            push @to_all, extract_only_addrs($value) if defined($value);
+        }
     }
 
     ### Create SMTP client:
     require Net::SMTP;
     my $smtp = MIME::Lite::SMTP->new(@args)
-		or Carp::croak("Failed to connect to mail server: $!\n");
+        or Carp::croak("Failed to connect to mail server: $!\n");
     $smtp->mail($from)
-		or Carp::croak( "SMTP MAIL command failed: $!\n" . $smtp->message . "\n" );
+        or Carp::croak( "SMTP MAIL command failed: $!\n" . $smtp->message . "\n" );
     $smtp->to(@to_all)
-		or Carp::croak( "SMTP RCPT command failed: $!\n" . $smtp->message . "\n" );
+        or Carp::croak( "SMTP RCPT command failed: $!\n" . $smtp->message . "\n" );
     $smtp->data()
-		or Carp::croak( "SMTP DATA command failed: $!\n" . $smtp->message . "\n" );
+        or Carp::croak( "SMTP DATA command failed: $!\n" . $smtp->message . "\n" );
 
     ### MIME::Lite can print() to anything with a print() method:
     $self->print_for_smtp($smtp);
 
     $smtp->dataend()
-    	or Carp::croak( "Net::CMD (Net::SMTP) DATAEND command failed.\n".
-    	                "Last server message was:" . $smtp->message .
-    	                "This probably represents a problem with newline encoding " );
+        or Carp::croak( "Net::CMD (Net::SMTP) DATAEND command failed.\n".
+                        "Last server message was:" . $smtp->message .
+                        "This probably represents a problem with newline encoding " );
     $smtp->quit;
     1;
 }
@@ -2816,22 +2819,22 @@ my %esc = (
 );
 
 sub _hexify {
-	local $_=shift;
-	my @split=m/(.{1,16})/gs;
-	foreach my $split (@split) {
-		(my $txt=$split)=~s/([\a\b\t\n\f\r\e])/$esc{$1}/sg;
-		$split=~s/(.)/sprintf("%02X ",ord($1))/sge;
-		print STDERR "M::L >>> $split : $txt\n";
-	}
+    local $_=shift;
+    my @split=m/(.{1,16})/gs;
+    foreach my $split (@split) {
+        (my $txt=$split)=~s/([\a\b\t\n\f\r\e])/$esc{$1}/sg;
+        $split=~s/(.)/sprintf("%02X ",ord($1))/sge;
+        print STDERR "M::L >>> $split : $txt\n";
+    }
 }
 
 sub print {
-	my $smtp=shift;
-	$MIME::Lite::DEBUG and _hexify(join("",@_));
-	$smtp->datasend(@_)
-		or Carp::croak( "Net::CMD (Net::SMTP) DATASEND command failed.\n".
-    	                "Last server message was:" . $smtp->message .
-    	                "This probably represents a problem with newline encoding " );
+    my $smtp=shift;
+    $MIME::Lite::DEBUG and _hexify(join("",@_));
+    $smtp->datasend(@_)
+        or Carp::croak( "Net::CMD (Net::SMTP) DATASEND command failed.\n".
+                        "Last server message was:" . $smtp->message .
+                        "This probably represents a problem with newline encoding " );
 }
 
 
@@ -2930,7 +2933,7 @@ readers.  But okay, you asked for it, you got it...
 here's how you can suppress the standard MIME headers.
 Before you send the message, do this:
 
-	$msg->scrub;
+    $msg->scrub;
 
 You can scrub() any part of a multipart message independently;
 just be aware that it works recursively.  Before you scrub,
@@ -2974,9 +2977,9 @@ You can always scrub "content-length" safely.
 
 By using the Filename option (which is different from Path!):
 
-	$msg->attach(Type => "image/gif",
-	             Path => "/here/is/the/real/file.GIF",
-	             Filename => "logo.gif");
+    $msg->attach(Type => "image/gif",
+                 Path => "/here/is/the/real/file.GIF",
+                 Filename => "logo.gif");
 
 You should I<not> put path information in the Filename.
 
@@ -3345,7 +3348,7 @@ you provide.
 
 =head1 VERSION
 
-Version: 3.01 (Maintenance release and a new caretaker!)
+Version: 3.01_02 (Dev/Test Release)
 
 =head1 CHANGE LOG
 

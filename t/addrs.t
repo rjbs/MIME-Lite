@@ -10,7 +10,7 @@ $MIME::Lite::VANILLA  = 1;
 $MIME::Lite::PARANOID = 1;
 
 # Pairs:
-my @pairs = 
+my @pairs =
     (
      ['  me@myhost.com      ',
       1,
@@ -52,15 +52,15 @@ my @pairs =
       4,
       '<me@myhost.com> <mylogin> <yourlogin> <she@herhost.com>']
      );
-      
+
 
 # Abort?
-if (eval "require Mail::Address") {
+if (0 and eval "require Mail::Address") {
     $T->begin(1);
     $T->ok(1, "we have and trust Mail::Address");
     $T->end;
     exit 0;
-}  
+}
 
 # Begin testing:
 $T->begin(2 * @pairs);
@@ -68,7 +68,7 @@ $T->begin(2 * @pairs);
 # New:
 foreach my $pair (@pairs) {
     my ($to, $count, $result) = @$pair;
-    my @addrs = MIME::Lite::extract_addrs($to);
+    my @addrs = MIME::Lite::extract_only_addrs($to);
 
     $T->ok_eqnum(int(@addrs), $count,
                  "compare count",
