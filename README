@@ -1,5 +1,11 @@
-This is MIME::Lite 3.01 Maintenance release
+This is MIME::Lite 3.01_01 Test Maintenance Release
 -------------------------------------------------------------------------
+TEST RELEASE
+    Please be WARNED that this is a test release and should NOT be blindly
+    put into production. I would appreciate any and all feedback as to
+    whether any problems occur in using it, especially as I have no way
+    currently to test sendmail functionality.
+
 INSTALLATION
     Install using
 
@@ -42,18 +48,6 @@ OTHER MODULES
     Good to have installed is the latest MIME::Types, Mail::Address MIME::Base64.
 
 BUGS
-    The whole reason that version 3.01 was released was to ensure that
-    MIME::Lite is up to date and patched. If you find an issue please report
-    it.
-
-    As far as I know MIME::Lite doesnt currently have any serious bugs, but
-    my usage is hardly comprehensive.
-
-    Having said that there are a number of open issues for me, mostly caused
-    by the progress in the community as whole since Eryq last released. The
-    tests are based around an interesting but non standard test framework.
-    I'd like to change it over to using Test::More.
-
     Should tests fail please review the ./testout directory, and in any bug
     reports please include the output of the relevent file. This is the only
     redeeming feature of not using Test::More that I can see.
@@ -73,7 +67,7 @@ TERMS AND CONDITIONS
     itself.
 
     This software comes with NO WARRANTY of any kind. See the COPYING
-    file in the distribution for details.    
+    file in the distribution for details.
 
 -------------------------------------------------------------------------------
 
@@ -101,4 +95,3 @@ that illustrates your question if you go there for advice.
 
 
 
-  

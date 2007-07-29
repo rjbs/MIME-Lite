@@ -2,6 +2,65 @@
 
 =over 4
 
+=item Version 3.01_01 (2003/04/25 - 2003/08/21)
+
+(This version is a test release, if its ok then I'll re-release it as 3.02)
+
+Patched the pod to use correct entities Thanks to Ed Avis  for the patch.
+Added better support for funky names in the from field when sending via SMTP, thanks to
+prodding by Darren Hemphill and Ollie Gallardo. (Actually I kind of messed this up orginally
+and no doubt Darren wasn't impressed. I ended up using something pretty close to his solution.
+My bad for not paying more attention. Sorry mate.)
+
+08/21: Apparently I never uploaded my changes for this version to CPAN. Sigh.
+
+*** Win32 CHANGES ***
+
+Up until this release the default send() method for all OS'es has been to invoke sendmail
+and pipe the mail to it. This behaviour has now changed on Win32 to default to using SMTP.
+This means that if your /site/lib/Net/libnet.cfg file is properly configured then you can
+use SMTP without specifying a send method explicitly.  This seemed a rational decision as
+most Win32 users who send mails are using an SMTP server and not a tool like sendmail.
+
+*** SMTP CHANGES ***
+
+Jonathan Eunice <jeunice at illuminata dot com> pointed out an interesting bug in the
+interaction between MIME::Lite and Net::SMTP/Net::CMD.  This was that sending a mail
+ending in "\n\n" without additional encoding would cause Net::CMD to send an incorrect
+end of mail signal to the SMTP server which would result in A) The mail failing to be sent due
+to a timeout, and B) MIME::Lite to report that all was well.
+
+This has been fixed by checking to make sure that if the last character sent was \n, but the
+last two chars were not \r\n then the \n is turned into an \r, which Net::CMD then adds an \n
+to and then sends the normal ".\r\n" to terminate the message.  Weird error, that im not
+entirely sure has been resolved properly. Please inform me if this screws anything up that it
+shouldn't.
+
+As stated earlier send_by_smtp wasnt extracting the _real_ email address from the overall fancy
+once specified in the From: field. This is resolved now, fancy display names are now possible
+while using SMTP.
+
+*** Content-Id ***
+
+It was pointed out by alex via CPAN RT that Content-Id needs to have angle brackets around
+it or HTML mails dont show up properly in many mail clients, furthermore the RFC mandates it
+(to be honest im taking his word on this, please feel free to yell at me if this causes trouble),
+so as he suggested I am automatically adding them in they arent provided.
+
+*** sendmail path ***
+
+Dom pointed out via CPAN RT that despite some effort going in to trying to discover the correct
+location of sendmail, that it was still using a bad default. Fixed.
+
+*** Date Stamping ***
+
+Kurt reported via RT that datestamps were not being correctly formatted. His patch has been incorporated
+with only one change, a comment where Perl was spelled PERL :-)
+
+*** Quoted printable fix ***
+
+Klaus Rusch noted a bug in how quoted-printable handled weird \r\n combinations. Fixed now.
+
 =item Version 3.01 (2003/04/25)
 
 Eryq has reappeared long enough to graciously hand over the maintaince of the
@@ -29,7 +88,7 @@ A wee tad overkill I think. :-)
 
 =item Version 2.117   (2001/08/20)
 
-The terms-of-use have been placed in the distribution file "COPYING".  
+The terms-of-use have been placed in the distribution file "COPYING".
 Also, small documentation tweaks were made.
 
 
@@ -41,24 +100,24 @@ I<Thanks to Casey West for the patch.>
 
 =item Version 2.114   (2001/08/16)
 
-New special 'AUTO' content type in new()/build() tells MIME::Lite to 
-try and guess the type from file extension.  To make use of 
+New special 'AUTO' content type in new()/build() tells MIME::Lite to
+try and guess the type from file extension.  To make use of
 this, you'll want to install B<MIME::Types>.
 The "AUTO" setting can be made the default default (instead of "TEXT")
 if you set C<$AUTO_CONTENT_TYPE = 1, $PARANOID = 0>.
-I<Thanks to> Ville SkyttE<#228> I<for these patches.>
+I<Thanks to> Ville SkyttE<228> I<for these patches.>
 
 File::Basename is used if it is available.
-I<Thanks to> Ville SkyttE<#228> I<for this patch.>
+I<Thanks to> Ville SkyttE<228> I<for this patch.>
 
 SMTP failures (in send_by_smtp) now add the $smtp-E<gt>message to the
 croak'ed exception, so if things go wrong, you get a better
 idea of what and why.
 I<Thanks to Thomas R. Wyant III for the patch.>
 
-Made a subtle change to C<as_string> which supposedly fixes a 
-failed MIME data.t test with Perl 5.004_04 on NT 4 sp6.  
-The problem might only exist in this old perl, but as the patch 
+Made a subtle change to C<as_string> which supposedly fixes a
+failed MIME data.t test with Perl 5.004_04 on NT 4 sp6.
+The problem might only exist in this old perl, but as the patch
 author says, not everyone has climbed higher on the Perl ladder.
 I<Thanks to John Gotts for the patch.>
 
@@ -76,19 +135,19 @@ Corrected some mis-docs.
 Added long-overdue C<parts()> and C<parts_DFS()> methods.
 
     No instance method
-       For accessing the subparts?			   
-    That can't be right.  D'OH!		 
+       For accessing the subparts?
+    That can't be right.  D'OH!
 
 Added long-overdue auto-verify logic to C<print()> method.
 
-Added long-overdue C<preamble()> method for getting/setting 
-the preamble text.  
+Added long-overdue C<preamble()> method for getting/setting
+the preamble text.
 I<Thanks to Jim Daigle for inspiring this.>
 
 
 =item Version 2.108   (2001/03/30)
 
-New C<field_order()> allows you to set the header order, both on a 
+New C<field_order()> allows you to set the header order, both on a
 per-message basis, and package-wide.
 I<Thanks to Thomas Stromberg for suggesting this.>
 
@@ -105,10 +164,10 @@ I<Thanks to Stefan Sautter for tracking this nasty little beast down.>
 I<Thanks to Larry Geralds for a related patch.>
 
     "Doctor, O doctor:
-       it's painful when I do *this* --" 
-    "Simple: don't *do* that." 
+       it's painful when I do *this* --"
+    "Simple: don't *do* that."
 
-Fixed bugs where a non-local C<$_> was being modified... again!  
+Fixed bugs where a non-local C<$_> was being modified... again!
 Will I never learn?
 I<Thanks to Maarten Koskamp for reporting this.>
 
@@ -128,7 +187,7 @@ I<Thanks to dLux for the bug report.>
 Added "Approved" as an acceptable header field for C<new()>, as per RFC1036.
 I<Thanks to Thomax for the suggestion regarding MIME-tools.>
 
-Small improvements to docs to make different uses of attach() 
+Small improvements to docs to make different uses of attach()
 and various arguments clearer.
 I<Thanks to Sven Rassman and Roland Walter for the suggestions.>
 
@@ -147,26 +206,26 @@ printed.  This seems sensible, and helps us implement scrub().
 
 The regression-test failure was identified, and it was my fault.
 Apparently some of the \-quoting in my "autoloaded" code was
-making Perl 5.6 unhappy.  For this nesting-related idiocy, 
+making Perl 5.6 unhappy.  For this nesting-related idiocy,
 a nesting kaiku.
 I<Thanks to Scott Schwartz for identifying the problem.>
 
     In a pattern, my
        backslash-s dwells peacefully,
     unambiguous --
-     
+
        but I embed it
-          in a double-quoted string    
+          in a double-quoted string
        doubling the backslash --
-     
+
           interpolating
-             that same double-quoted string 
+             that same double-quoted string
           in other patterns --
-           
+
              and, worlds within worlds,
                 I single-quote the function
-             to autoload it -- 
-    
+             to autoload it --
+
           changing the meaning
        of the backslash and the 's';
     and Five-Point-Six growls.
@@ -174,7 +233,7 @@ I<Thanks to Scott Schwartz for identifying the problem.>
 
 =item Version 2.104   (2000/09/28)
 
-Now attempts to load and use Mail::Address for parsing email 
+Now attempts to load and use Mail::Address for parsing email
 addresses I<before> falling back to our own method.
 I<Thanks to numerous people for suggesting this.>
 
@@ -182,7 +241,7 @@ I<Thanks to numerous people for suggesting this.>
        is too damn hard. One last hope:
     Let Graham Barr do it!
 
-For the curious, the version of Mail::Address appears 
+For the curious, the version of Mail::Address appears
 as the "A" number in the X-Mailer:
 
     X-Mailer: MIME::Lite 2.104  (A1.15; B2.09; Q2.03)
@@ -197,7 +256,7 @@ Major revision to print_body() and body_as_string() so that
 "body" really means "the part after the header", which is what most
 people would want in this context.  This is B<not> how it was used
 1.x, where "body" only meant "the body of a simple singlepart".
-Hopefully, this change will solve many problems and create very few ones.  
+Hopefully, this change will solve many problems and create very few ones.
 
 Added support for attaching a part to a "message/rfc822", treating
 the "message" type as a multipart-like container.
@@ -206,8 +265,8 @@ Now takes care not to include "Bcc:" in header when using send_by_smtp,
 as a safety precaution against qmail's behavior.
 I<Thanks to Tatsuhiko Miyagawa for identifying this problem.>
 
-Improved efficiency of many stringifying operations by using 
-string-arrays which are joined, instead of doing multiple appends 
+Improved efficiency of many stringifying operations by using
+string-arrays which are joined, instead of doing multiple appends
 to a scalar.
 
 Cleaned up the "examples" directory.
@@ -225,7 +284,7 @@ I<Thanks to David Mitchell for the bug report and suggested patch.>
 
 Fixed bug in parsing of addresses; please read the WARNINGS section
 which describes recommended address formats for "To:", "Cc:", etc.
-Also added automatic inclusion of a UT "Date:" at top level unless 
+Also added automatic inclusion of a UT "Date:" at top level unless
 explicitly told not to.
 I<Thanks to Andy Jacobs for the bug report and the suggestion.>
 
@@ -239,8 +298,8 @@ I<Thanks to Michael A. Chase for the patch.>
 
 Added new, taint-safe invocation of "sendmail", one which also
 sets up the C<-f> option.  Unfortunately, I couldn't make this automatic:
-the change could have broken a lot of code out there which used 
-send_by_sendmail() with unusual "sendmail" variants.  
+the change could have broken a lot of code out there which used
+send_by_sendmail() with unusual "sendmail" variants.
 So you'll have to configure "send" to use the new mechanism:
 
     MIME::Lite->send('sendmail');       ### no args!
@@ -263,7 +322,7 @@ To turn this off, set $MIME::Lite::AUTO_VERIFY to false.
 
 Added support for "Cc" and "Bcc" in send_by_smtp().
 To turn this off, set $MIME::Lite::AUTO_CC to false.
-I<Thanks to Lucas Maneos for the patch, and tons of others for 
+I<Thanks to Lucas Maneos for the patch, and tons of others for
 the suggestion.>
 
 Chooses a better default content-transfer-encoding if the content-type
@@ -290,7 +349,7 @@ properly.
 =item Version 1.130   (1998/12/14)
 
 Added much larger and more-flexible send() facility.
-I<Thanks to Andrew McRae (and Optimation New Zealand Ltd) 
+I<Thanks to Andrew McRae (and Optimation New Zealand Ltd)
 for the Net::SMTP interface.  Additional thanks to the many folks
 who requested this feature.>
 
@@ -338,7 +397,7 @@ Changed "stringify" methods to more-standard "as_string" methods.
 
 =item Version 1.112   (1997/03/06)
 
-Added C<read_now()>, and C<binmode()> method for our non-Unix-using brethren: 
+Added C<read_now()>, and C<binmode()> method for our non-Unix-using brethren:
 file data is now read using binmode() if appropriate.
 I<Thanks to Xiangzhou Wang for pointing out this bug.>
 
