@@ -12,7 +12,7 @@ WriteMakefile(
 	      DISTNAME     => "MIME-Lite",
 	      EXE_FILES    => [@EXES],
 	      'dist'       => {
-		  PREOP    => 'cvu_perl_preop -m MIME::Lite -f',
+		  #PREOP    => 'cvu_perl_preop -m MIME::Lite -f',#demerphq
 		  COMPRESS => 'gzip',
 		  SUFFIX   => 'gz',
 	      }
