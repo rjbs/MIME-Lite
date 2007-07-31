@@ -17,9 +17,9 @@ print "MIME::Lite is designed to take advantage of a variety of external modules
       "Some or all of these maybe included with your perl, neverless if you wish\n",
       "I can add these modules to the prereq list which will cause the files to be\n",
       "automatically installed if they arent already present\n";
-my %prereq;
+my %prereq = ('File::Spec' => undef);
 if (prompt("Add prereqs?",'Yes')=~/y/i) {
-    %prereq=(
+    %prereq=( %prereq,
               'Mail::Address'     => 1.62,
               'MIME::Types'       => 1.13,
               'File::Basename'    => undef,

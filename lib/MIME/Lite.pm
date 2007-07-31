@@ -392,14 +392,26 @@ if ( $^O =~ /win32/i ) {
     $SENDMAIL = "/usr/lib/sendmail";
     ( -x $SENDMAIL ) or ( $SENDMAIL = "/usr/sbin/sendmail" );
     ( -x $SENDMAIL ) or ( $SENDMAIL = "sendmail" );
+    unless (-x $SENDMAIL) {
+        require File::Spec;
+        for my $dir (File::Spec->path) {
+            if ( -x "$dir/sendmail" ) {
+                $SENDMAIL = "$dir/sendmail";
+                last;
+            }
+        }
+    }
+    unless (-x $SENDMAIL) {
+        Carp::croak "can't find an executable sendmail"
+    }
 }
 
 ### Our sending facilities:
 my %SenderArgs = (
-                   "sendmail" => ["$SENDMAIL -t -oi -oem"],
-                   "smtp" => [],
-                   "sub" => [],
-                 );
+  sendmail  => ["$SENDMAIL -t -oi -oem"],
+  smtp      => [],
+  sub       => [],
+);
 
 ### Boundary counter:
 my $BCount = 0;
