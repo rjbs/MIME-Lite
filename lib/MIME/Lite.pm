@@ -1095,19 +1095,8 @@ sub build {
     my $ds_wanted = $params{Datestamp};
     my $ds_defaulted = ( $is_top and !exists( $params{Datestamp} ) );
     if ( ( $ds_wanted or $ds_defaulted ) and !exists( $params{Date} ) ) {
-        # Updated to use local time and numeric offset per RFC 2822
-        # Calculate offset from UTC
-        use Time::Local;    # ships w/ Perl so should be OK to assume presence
-        my $t0 = timegm( 0,    0, 0, 2, 0, 70 );    # one day from epoch
-        my $t1 = timelocal( 0, 0, 0, 2, 0, 70 );
-        my $offset     = $t0 - $t1;
-        my $offset_hrs = int( $offset / 3600 );
-        my $offset_min = int( $offset / 60 ) - $offset_hrs * 60;
-        my $offset_str = sprintf "%+.2d%02d", $offset_hrs, $offset_min;
-        my ( $u_wdy, $u_mon, $u_mdy, $u_time, $u_y4 ) =
-          split /\s+/, localtime() . "";            ### should be non-locale-dependent
-        my $date = "$u_wdy, $u_mdy $u_mon $u_y4 $u_time $offset_str";
-        $self->add( "date", $date );
+        require Email::Date;
+        $self->add( "date", Email::Date::format_date() );
     }
 
     ### Set message headers:
