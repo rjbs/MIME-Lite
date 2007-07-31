@@ -2686,8 +2686,10 @@ sub send_by_sendmail {
         close SENDMAIL;
         $return = ( ( $? >> 8 ) ? undef: 1 );
     } else {    ### Build the command...
-        my %p =
-          map { UNIVERAL::isa( $_, 'ARRAY' ) ? @$_ : UNIVERAL::isa( $_, 'HASH' ) ? %$_ : $_ } @_;
+        my %p = map { UNIVERSAL::isa( $_, 'ARRAY' ) ? @$_
+                    : UNIVERSAL::isa( $_, 'HASH' )  ? %$_
+                    :                                  $_
+                    } @_;
 
         $p{Sendmail} = $SENDMAIL unless defined $p{Sendmail};
 
