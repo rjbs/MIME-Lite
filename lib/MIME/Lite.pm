@@ -350,8 +350,7 @@ use vars qw(
 #==============================
 #
 # GLOBALS, EXTERNAL/CONFIGURATION...
-$VERSION = "3.01_05";
-$VERSION = eval $VERSION;
+$VERSION = '3.020';
 
 ### Automatically interpret CC/BCC for SMTP:
 $AUTO_CC = 1;
@@ -392,14 +391,26 @@ if ( $^O =~ /win32/i ) {
     $SENDMAIL = "/usr/lib/sendmail";
     ( -x $SENDMAIL ) or ( $SENDMAIL = "/usr/sbin/sendmail" );
     ( -x $SENDMAIL ) or ( $SENDMAIL = "sendmail" );
+    unless (-x $SENDMAIL) {
+        require File::Spec;
+        for my $dir (File::Spec->path) {
+            if ( -x "$dir/sendmail" ) {
+                $SENDMAIL = "$dir/sendmail";
+                last;
+            }
+        }
+    }
+    unless (-x $SENDMAIL) {
+        Carp::croak "can't find an executable sendmail"
+    }
 }
 
 ### Our sending facilities:
 my %SenderArgs = (
-                   "sendmail" => ["$SENDMAIL -t -oi -oem"],
-                   "smtp" => [],
-                   "sub" => [],
-                 );
+  sendmail  => ["$SENDMAIL -t -oi -oem"],
+  smtp      => [],
+  sub       => [],
+);
 
 ### Boundary counter:
 my $BCount = 0;
@@ -1083,19 +1094,8 @@ sub build {
     my $ds_wanted = $params{Datestamp};
     my $ds_defaulted = ( $is_top and !exists( $params{Datestamp} ) );
     if ( ( $ds_wanted or $ds_defaulted ) and !exists( $params{Date} ) ) {
-        # Updated to use local time and numeric offset per RFC 2822
-        # Calculate offset from UTC
-        use Time::Local;    # ships w/ Perl so should be OK to assume presence
-        my $t0 = timegm( 0,    0, 0, 2, 0, 70 );    # one day from epoch
-        my $t1 = timelocal( 0, 0, 0, 2, 0, 70 );
-        my $offset     = $t0 - $t1;
-        my $offset_hrs = int( $offset / 3600 );
-        my $offset_min = int( $offset / 60 ) - $offset_hrs * 60;
-        my $offset_str = sprintf "%+.2d%02d", $offset_hrs, $offset_min;
-        my ( $u_wdy, $u_mon, $u_mdy, $u_time, $u_y4 ) =
-          split /\s+/, localtime() . "";            ### should be non-locale-dependent
-        my $date = "$u_wdy, $u_mdy $u_mon $u_y4 $u_time $offset_str";
-        $self->add( "date", $date );
+        require Email::Date;
+        $self->add( "date", Email::Date::format_date() );
     }
 
     ### Set message headers:
@@ -2674,8 +2674,10 @@ sub send_by_sendmail {
         close SENDMAIL;
         $return = ( ( $? >> 8 ) ? undef: 1 );
     } else {    ### Build the command...
-        my %p =
-          map { UNIVERAL::isa( $_, 'ARRAY' ) ? @$_ : UNIVERAL::isa( $_, 'HASH' ) ? %$_ : $_ } @_;
+        my %p = map { UNIVERSAL::isa( $_, 'ARRAY' ) ? @$_
+                    : UNIVERSAL::isa( $_, 'HASH' )  ? %$_
+                    :                                  $_
+                    } @_;
 
         $p{Sendmail} = $SENDMAIL unless defined $p{Sendmail};
 
@@ -3593,7 +3595,7 @@ you provide.
 
 =head1 VERSION
 
-Version: 3.01_05 (Dev Test Release)
+Version: 3.01_06 (Dev Test Release)
 
 =head1 CHANGE LOG
 

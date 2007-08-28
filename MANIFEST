@@ -1,5 +1,6 @@
 COPYING
 INSTALLING
+LICENSE
 MANIFEST
 Makefile.PL
 README
@@ -18,10 +19,11 @@ t/addrs.t
 t/data.t
 t/head.t
 t/parts.t
+t/pod.t
+t/pod-coverage.t
 t/verify.t
 t/types.t
 testin/README
 testin/hello
 testin/test.html
 changes.pod
-META.yml                                Module meta-data (added by MakeMaker)
