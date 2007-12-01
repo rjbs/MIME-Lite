@@ -18,8 +18,8 @@ print "MIME::Lite is designed to take advantage of a variety of external modules
       "I can add these modules to the prereq list which will cause the files to be\n",
       "automatically installed if they arent already present\n";
 my %prereq = (
-  'File::Spec'  => 0,
-  'Email::Date' => 0,
+  'File::Spec'          => 0,
+  'Email::Date::Format' => '1.000', # first release
 );
 if (prompt("Add prereqs?",'Yes')=~/y/i) {
     %prereq=( %prereq,

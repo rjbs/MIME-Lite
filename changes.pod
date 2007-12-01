@@ -2,7 +2,12 @@
 
 =over 4
 
-=item Version 3.02
+=item Version 3.021
+
+Replace Email::Date with Email::Date::Format to limit prereqs
+(Email::Date::Format produced just for this!)
+
+=item Version 3.020
 
 Optimized code for speedup of creation of two-part messages. The internal
 structure of the object has changes, but that won't matter if you were

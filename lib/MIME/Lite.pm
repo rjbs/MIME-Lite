@@ -350,7 +350,7 @@ use vars qw(
 #==============================
 #
 # GLOBALS, EXTERNAL/CONFIGURATION...
-$VERSION = '3.020';
+$VERSION = '3.021';
 
 ### Automatically interpret CC/BCC for SMTP:
 $AUTO_CC = 1;
@@ -1094,8 +1094,8 @@ sub build {
     my $ds_wanted = $params{Datestamp};
     my $ds_defaulted = ( $is_top and !exists( $params{Datestamp} ) );
     if ( ( $ds_wanted or $ds_defaulted ) and !exists( $params{Date} ) ) {
-        require Email::Date;
-        $self->add( "date", Email::Date::format_date() );
+        require Email::Date::Format;
+        $self->add( "date", Email::Date::Format::email_date() );
     }
 
     ### Set message headers:
