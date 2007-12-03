@@ -2,7 +2,14 @@
 
 =over 4
 
-=item Version 3.02
+=item Version 3.021
+
+Replace Email::Date with Email::Date::Format to limit prereqs
+(Email::Date::Format produced just for this!)
+
+Begin the process of removing use of ExtUtils::TBone for testing
+
+=item Version 3.020
 
 Optimized code for speedup of creation of two-part messages. The internal
 structure of the object has changes, but that won't matter if you were
@@ -10,6 +17,10 @@ using the published interface.  (Sam Tregar)
 
 Removed the "advanced features", ie auto-fallback delivery, from
 send_by_smtp. They didn't belong there in the first place.
+
+=item Version 3.01_06 (2007/07/29)
+
+First release from Perl Email Project.  Updated packaging.
 
 =item Version 3.01_04 (2004/05/05)
 
