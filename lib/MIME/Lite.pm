@@ -2674,10 +2674,19 @@ sub send_by_sendmail {
         close SENDMAIL;
         $return = ( ( $? >> 8 ) ? undef: 1 );
     } else {    ### Build the command...
-        my %p = map { UNIVERSAL::isa( $_, 'ARRAY' ) ? @$_
-                    : UNIVERSAL::isa( $_, 'HASH' )  ? %$_
-                    :                                  $_
-                    } @_;
+        my %p;
+        STUPID_PARAM: for (my $i = 0; $i < @_; $i++) { ## no critic Loop
+          my $item = $_[$i];
+          if (not ref $item) {
+            $p{ $item } = $_[ ++$i ];
+          } elsif (UNIVERSAL::isa($item, 'HASH')) {
+            $p{ $_ } = $item->{ $_ } for keys %$item;
+          } elsif (UNIVERSAL::isa($item, 'ARRAY')) {
+            for (my $j = 0; $j < @$item; $j += 2) {
+              $p{ $item->[ $j ] } = $item->[ $j + 1 ];
+            }
+          }
+        }
 
         $p{Sendmail} = $SENDMAIL unless defined $p{Sendmail};
 
