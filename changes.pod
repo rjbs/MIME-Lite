@@ -7,6 +7,8 @@
 Replace Email::Date with Email::Date::Format to limit prereqs
 (Email::Date::Format produced just for this!)
 
+Begin the process of removing use of ExtUtils::TBone for testing
+
 =item Version 3.020
 
 Optimized code for speedup of creation of two-part messages. The internal
