@@ -503,12 +503,13 @@ BEGIN {
     my $LOCALPART = '(?:' . $WORD . '(?:' . '\\.' . $WORD . ')*' . ')';
     my $ADDR      = '(?:' . $LOCALPART . '@' . $DOMAIN . ')';
     my $PHRASE    = '(?:' . $WORD . ')+';
-    my $SEP       = "(?:^\\s*|\\s*,\\s*)";                                ### before elems in a list
+    my $SEP       = "(?:^\\s*|\\s*,\\s*)"; ### before elems in a list
 
     sub my_extract_full_addrs {
         my $str = shift;
+        return unless $str;
         my @addrs;
-        $str =~ s/\s/ /g;                                                 ### collapse whitespace
+        $str =~ s/\s/ /g; ### collapse whitespace
 
         pos($str) = 0;
         while ( $str !~ m{\G\s*\Z}gco ) {
