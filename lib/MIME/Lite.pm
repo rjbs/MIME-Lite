@@ -2659,6 +2659,25 @@ if the send was succesful or not.
 
 =cut
 
+sub _unfold_stupid_params {
+  my $self = shift;
+
+  my %p;
+  STUPID_PARAM: for (my $i = 0; $i < @_; $i++) { ## no critic Loop
+    my $item = $_[$i];
+    if (not ref $item) {
+      $p{ $item } = $_[ ++$i ];
+    } elsif (UNIVERSAL::isa($item, 'HASH')) {
+      $p{ $_ } = $item->{ $_ } for keys %$item;
+    } elsif (UNIVERSAL::isa($item, 'ARRAY')) {
+      for (my $j = 0; $j < @$item; $j += 2) {
+        $p{ $item->[ $j ] } = $item->[ $j + 1 ];
+      }
+    }
+  }
+
+  return %p;
+}
 
 sub send_by_sendmail {
     my $self = shift;
@@ -2674,19 +2693,7 @@ sub send_by_sendmail {
         close SENDMAIL;
         $return = ( ( $? >> 8 ) ? undef: 1 );
     } else {    ### Build the command...
-        my %p;
-        STUPID_PARAM: for (my $i = 0; $i < @_; $i++) { ## no critic Loop
-          my $item = $_[$i];
-          if (not ref $item) {
-            $p{ $item } = $_[ ++$i ];
-          } elsif (UNIVERSAL::isa($item, 'HASH')) {
-            $p{ $_ } = $item->{ $_ } for keys %$item;
-          } elsif (UNIVERSAL::isa($item, 'ARRAY')) {
-            for (my $j = 0; $j < @$item; $j += 2) {
-              $p{ $item->[ $j ] } = $item->[ $j + 1 ];
-            }
-          }
-        }
+        my %p = $self->_unfold_stupid_params(@_);
 
         $p{Sendmail} = $SENDMAIL unless defined $p{Sendmail};
 
