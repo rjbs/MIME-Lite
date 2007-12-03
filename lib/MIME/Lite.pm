@@ -12,13 +12,13 @@ Create and send using the default send method for your OS a single-part message:
     use MIME::Lite;
     ### Create a new single-part message, to send a GIF file:
     $msg = MIME::Lite->new(
-        From     =>'me@myhost.com',
-        To       =>'you@yourhost.com',
-        Cc       =>'some@other.com, some@more.com',
-        Subject  =>'Helloooooo, nurse!',
-        Type     =>'image/gif',
-        Encoding =>'base64',
-        Path     =>'hellonurse.gif'
+        From     => 'me@myhost.com',
+        To       => 'you@yourhost.com',
+        Cc       => 'some@other.com, some@more.com',
+        Subject  => 'Helloooooo, nurse!',
+        Type     => 'image/gif',
+        Encoding => 'base64',
+        Path     => 'hellonurse.gif'
     );
     $msg->send; # send via default
 
@@ -26,22 +26,22 @@ Create a multipart message (i.e., one with attachments) and send it SMTP
 
     ### Create a new multipart message:
     $msg = MIME::Lite->new(
-        From    =>'me@myhost.com',
-        To      =>'you@yourhost.com',
-        Cc      =>'some@other.com, some@more.com',
-        Subject =>'A message with 2 parts...',
-        Type    =>'multipart/mixed'
+        From    => 'me@myhost.com',
+        To      => 'you@yourhost.com',
+        Cc      => 'some@other.com, some@more.com',
+        Subject => 'A message with 2 parts...',
+        Type    => 'multipart/mixed'
     );
 
     ### Add parts (each "attach" has same arguments as "new"):
     $msg->attach(
-        Type     =>'TEXT',
-        Data     =>"Here's the GIF file you wanted"
+        Type     => 'TEXT',
+        Data     => "Here's the GIF file you wanted"
     );
     $msg->attach(
-        Type     =>'image/gif',
-        Path     =>'aaa000123.gif',
-        Filename =>'logo.gif',
+        Type     => 'image/gif',
+        Path     => 'aaa000123.gif',
+        Filename => 'logo.gif',
         Disposition => 'attachment'
     );
     ### use Net:SMTP to do the sending
@@ -383,7 +383,7 @@ $MIME::Lite::DEBUG = 0;
 my $Sender = "";
 my $SENDMAIL = "";
 
-if ( $^O =~ /win32/i ) {
+if ( $^O =~ /win32|cygwin/i ) {
     $Sender = "smtp";
 } else {
     ### Find sendmail:
@@ -2831,9 +2831,7 @@ sub send_by_smtp {
     my @hdr_to = extract_only_addrs( scalar $self->get('To') );
     if ($AUTO_CC) {
         foreach my $field (qw(Cc Bcc)) {
-            my $value = $self->get($field);
-            push @hdr_to, extract_only_addrs($value)
-                if defined($value);
+            push @hdr_to, extract_only_addrs($_) for $self->get($field);
         }
     }
     Carp::croak "send_by_smtp: nobody to send to for host '$hostname'?!\n"

@@ -2,6 +2,13 @@
 
 =over 4
 
+=item Version 3.022
+
+Behave on Cygwin as on Win32 with regard to defaulting to SMTP sending.
+
+Respect crazy people who put multiple Cc or Bcc headers in message (#30574,
+thanks Pavel V. Rochnyack!)
+
 =item Version 3.021
 
 Replace Email::Date with Email::Date::Format to limit prereqs
