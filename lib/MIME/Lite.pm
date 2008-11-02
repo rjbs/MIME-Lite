@@ -172,7 +172,7 @@ This will create a multipart message exactly as above, but using the
         Type     =>'text/html',
         Data     =>'<H1>Hello</H1>',
     );
-    $part->attr('content-type.charset' => 'UTF8');
+    $part->attr('content-type.charset' => 'UTF-8');
     $part->add('X-Comment' => 'A message for you');
 
     ### Attach it to any message:

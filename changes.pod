@@ -2,6 +2,10 @@
 
 =over 4
 
+=item Version 3.023
+
+Fix typo in perldoc: utf-8, not utf8
+
 =item Version 3.022
 
 Behave on Cygwin as on Win32 with regard to defaulting to SMTP sending.
@@ -13,7 +17,9 @@ We no longer rewrite array and hash refs in the send_by_sendmail args so
 aggressively.
 
 Cope with missing local sendmail (thanks to Debian for patching for this, but
-no thanks for not I<sending me> the patch)!
+no thanks for not I<sending me> the patch!)
+
+Fix weird unicode-in-$1 bug (thanks SREZIC!)
 
 Other minor bug fixes.
 
