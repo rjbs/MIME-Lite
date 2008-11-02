@@ -12,6 +12,9 @@ thanks Pavel V. Rochnyack!)
 We no longer rewrite array and hash refs in the send_by_sendmail args so
 aggressively.
 
+Cope with missing local sendmail (thanks to Debian for patching for this, but
+no thanks for not I<sending me> the patch)!
+
 Other minor bug fixes.
 
 =item Version 3.021

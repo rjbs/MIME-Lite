@@ -1,5 +1,6 @@
 package MIME::Lite;
-
+use strict;
+require 5.004;    ### for /c modifier in m/\G.../gc modifier
 
 =head1 NAME
 
@@ -326,13 +327,9 @@ and trusting these other packages to do the right thing.
 
 =cut
 
-
-require 5.004;    ### for /c modifier in m/\G.../gc modifier
-
-use Carp();
+use Carp ();
 use FileHandle;
 
-use strict;
 use vars qw(
   $AUTO_CC
   $AUTO_CONTENT_TYPE
@@ -346,11 +343,8 @@ use vars qw(
 );
 
 
-#==============================
-#==============================
-#
 # GLOBALS, EXTERNAL/CONFIGURATION...
-$VERSION = '3.021';
+$VERSION = '3.022';
 
 ### Automatically interpret CC/BCC for SMTP:
 $AUTO_CC = 1;
@@ -401,13 +395,13 @@ if ( $^O =~ /win32|cygwin/i ) {
         }
     }
     unless (-x $SENDMAIL) {
-        Carp::croak "can't find an executable sendmail"
+        undef $SENDMAIL;
     }
 }
 
 ### Our sending facilities:
 my %SenderArgs = (
-  sendmail  => ["$SENDMAIL -t -oi -oem"],
+  sendmail  => [$SENDMAIL ? "$SENDMAIL -t -oi -oem" : undef],
   smtp      => [],
   sub       => [],
 );
@@ -2260,7 +2254,9 @@ sub print_simple_body {
 
                 ### Encode it line by line:
                 while ( $untainted =~ m{^(.*[\r\n]*)}smg ) {
-                    $out->print( encode_qp($1) );    ### have to do it line by line...
+                    ### have to do it line by line...
+                    my $line = $1; # copy to avoid weird bug; rt 39334
+                    $out->print( encode_qp($line) );
                 }
                 last DATA;
             };
@@ -2686,6 +2682,7 @@ sub send_by_sendmail {
     if ( @_ == 1 and !ref $_[0] ) {
         ### Use the given command...
         my $sendmailcmd = shift @_;
+        Carp::croak "No sendmail command available" unless $sendmailcmd;
 
         ### Do it:
         local *SENDMAIL;
