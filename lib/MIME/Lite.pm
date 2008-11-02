@@ -2254,7 +2254,9 @@ sub print_simple_body {
 
                 ### Encode it line by line:
                 while ( $untainted =~ m{^(.*[\r\n]*)}smg ) {
-                    $out->print( encode_qp($1) );    ### have to do it line by line...
+                    ### have to do it line by line...
+                    my $line = $1; # copy to avoid weird bug; rt 39334
+                    $out->print( encode_qp($line) );
                 }
                 last DATA;
             };
