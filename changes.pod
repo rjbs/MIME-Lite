@@ -4,6 +4,8 @@
 
 =item Version 3.023
 
+Correct erroneous changelog entry
+
 Fix typo in perldoc: utf-8, not utf8
 
 =item Version 3.022
@@ -16,8 +18,8 @@ thanks Pavel V. Rochnyack!)
 We no longer rewrite array and hash refs in the send_by_sendmail args so
 aggressively.
 
-Cope with missing local sendmail (thanks to Debian for patching for this, but
-no thanks for not I<sending me> the patch!)
+Cope with missing local sendmail (thanks to Debian for patching for this, and
+for putting up with me (rjbs) being an insufferable jerk!)
 
 Fix weird unicode-in-$1 bug (thanks SREZIC!)
 
