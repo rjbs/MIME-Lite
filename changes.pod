@@ -2,6 +2,10 @@
 
 =over 4
 
+=item Version 3.024
+
+add git repo link to metadata
+
 =item Version 3.023
 
 Correct erroneous changelog entry
