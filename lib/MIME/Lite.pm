@@ -2754,6 +2754,8 @@ Please see L<Good-vs-bad email addresses with send_by_smtp()|/Good-vs-bad email 
 
 =item Timeout
 
+=item Port
+
 =item ExactAddresses
 
 =item Debug
