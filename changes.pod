@@ -2,6 +2,11 @@
 
 =over 4
 
+=item Version 3.025
+
+Added back support for providing a non-default SMTP port (#21156,
+#48783, thanks John Bokma!).
+
 =item Version 3.024
 
 add git repo link to metadata
