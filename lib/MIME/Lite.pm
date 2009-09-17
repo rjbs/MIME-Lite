@@ -436,7 +436,7 @@ if ( eval "require File::Basename" ) {    # not affected by $PARANOID, core Perl
 
 ### See if we have/want MIME::Types
 my $HaveMimeTypes = 0;
-if ( !$PARANOID and eval "require MIME::Types; MIME::Types->VERSION(1.004);" ) {
+if ( !$PARANOID and eval "require MIME::Types; MIME::Types->VERSION(1.28);" ) {
     $HaveMimeTypes = 1;
     push @Uses, "T$MIME::Types::VERSION";
 }
