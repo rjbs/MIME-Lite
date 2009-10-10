@@ -2,7 +2,11 @@
 
 =over 4
 
-=item Version 3.025
+=item Version 3.027
+
+Add send_to_testfile method (Thanks, AlexanderBecker)
+
+=item Version 3.026
 
 Fix tests to pass with MIME::Types 1.28
 
