@@ -2909,6 +2909,37 @@ sub send_by_smtp {
     return $self->{last_send_successful} = 1;
 }
 
+=item send_by_testfile FILENAME
+
+I<Instance method.>
+Print message to a file (namely FILENAME), which will default to
+mailer.testfile
+If file exists, message will be appended.
+
+=cut
+
+sub send_by_testfile {
+  my $self = shift;
+
+  ### Use the default filename...
+  my $filename = 'mailer.testfile';
+
+  if ( @_ == 1 and !ref $_[0] ) {
+    ### Use the given filename if given...
+    $filename = shift @_;
+    Carp::croak "no filename given to send_by_testfile" unless $filename;
+  }
+
+  ### Do it:
+  local *FILE;
+  open FILE, ">> $filename" or Carp::croak "open $filename: $!\n";
+  $self->print( \*FILE );
+  close FILE;
+  my $return = ( ( $? >> 8 ) ? undef: 1 );
+
+  return $self->{last_send_successful} = $return;
+}
+
 =item last_send_successful
 
 This method will return TRUE if the last send() or send_by_XXX() method call was
