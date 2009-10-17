@@ -2520,7 +2520,7 @@ arguments passed in will also be passed through to send_by_smtp.
 This is useful for things like mail servers requiring authentication
 where you can say something like the following
 
-  MIME::List->send('smtp', $host, AuthUser=>$user, AuthPass=>$pass);
+  MIME::Lite->send('smtp', $host, AuthUser=>$user, AuthPass=>$pass);
 
 which will configure things so future uses of
 
