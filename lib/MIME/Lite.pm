@@ -69,8 +69,7 @@ Specify default send method:
 
 with authentication
 
-    MIME::Lite->send('smtp','some.host',
-       AuthUser=>$user, AuthPass=>$pass);
+    MIME::Lite->send('smtp','some.host', AuthUser=>$user, AuthPass=>$pass);
 
 =head1 DESCRIPTION
 
@@ -237,7 +236,7 @@ This will create a multipart message exactly as above, but using the
 
     ### Do something like this in your 'main':
     if ($I_DONT_HAVE_SENDMAIL) {
-       MIME::Lite->send('smtp', $host, Timeout=>60
+       MIME::Lite->send('smtp', $host, Timeout=>60,
            AuthUser=>$user, AuthPass=>$pass);
     }
 
@@ -3597,7 +3596,8 @@ MIME::Lite.
 MIME::Lite works nicely with other certain other modules if they are present.
 Good to have installed is the latest L<MIME::Types|MIME::Types>,
 L<Mail::Address|Mail::Address>, L<MIME::Base64|MIME::Base64>,
-L<MIME::QuotedPrint|MIME::QuotedPrint>.
+L<MIME::QuotedPrint|MIME::QuotedPrint>.  L<Email::Date::Format> is strictly
+required.
 
 If they aren't present then some functionality won't work, and other features
 wont be as efficient or up to date as they could be. Nevertheless they are optional
@@ -3618,25 +3618,25 @@ come with.
 
 =head1 BUGS
 
-The whole reason that version 3.0 was released was to ensure that MIME::Lite
-is up to date and patched. If you find an issue please report it.
+The whole reason that version 3.0 was released was to ensure that MIME::Lite is
+up to date and patched. If you find an issue please report it.
 
-As far as I know MIME::Lite doesnt currently have any serious bugs, but my usage
-is hardly comprehensive.
+As far as I know MIME::Lite doesn't currently have any serious bugs, but my
+usage is hardly comprehensive.
 
-Having said that there are a number of open issues for me, mostly caused by the progress
-in the community as whole since Eryq last released. The tests are based around an
-interesting but non standard test framework. I'd like to change it over to using
-Test::More.
+Having said that there are a number of open issues for me, mostly caused by the
+progress in the community as whole since Eryq last released. The tests are
+based around an interesting but non standard test framework. I'd like to change
+it over to using Test::More.
 
 Should tests fail please review the ./testout directory, and in any bug reports
-please include the output of the relevent file. This is the only redeeming feature
-of not using Test::More that I can see.
+please include the output of the relevent file. This is the only redeeming
+feature of not using Test::More that I can see.
 
-Bug fixes / Patches / Contribution are welcome, however I probably won't apply them
-unless they also have an associated test. This means that if I dont have the time to
-write the test the patch wont get applied, so please, include tests for any patches
-you provide.
+Bug fixes / Patches / Contribution are welcome, however I probably won't apply
+them unless they also have an associated test. This means that if I dont have
+the time to write the test the patch wont get applied, so please, include tests
+for any patches you provide.
 
 =head1 VERSION
 
