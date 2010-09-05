@@ -168,6 +168,7 @@ This will create a multipart message exactly as above, but using the
 
     ### Create a standalone part:
     $part = MIME::Lite->new(
+        Top      => 0,
         Type     =>'text/html',
         Data     =>'<H1>Hello</H1>',
     );
