@@ -6,6 +6,14 @@ require 5.004;    ### for /c modifier in m/\G.../gc modifier
 
 MIME::Lite - low-calorie MIME generator
 
+=head1 WAIT!
+
+MIME::Lite is not recommended by its current maintainer.  There are a number of
+alternatives, like Email::MIME or MIME::Entity and Email::Sender, which you
+should probably use instead.  MIME::Lite continues to accrue weird bug reports,
+and it is not receiving a large amount of refactoring due to the availability
+of better alternatives.  Please consider using something else.
+
 =head1 SYNOPSIS
 
 Create and send using the default send method for your OS a single-part message:
