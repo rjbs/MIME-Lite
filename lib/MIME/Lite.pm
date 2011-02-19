@@ -887,7 +887,7 @@ Same as setting "content-id".
 
 I<Optional.>
 Set the content length explicitly.  Normally, this header is automatically
-computed, but only under certain circumstances (see L<"Limitations">).
+computed, but only under certain circumstances (see L<"Benign limitations">).
 
 =item Path
 
@@ -3703,5 +3703,3 @@ Patches And Maintenance by Yves Orton and many others.
 Consult ./changes.pod
 
 =cut
-
-
