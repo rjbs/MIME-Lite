@@ -5,7 +5,6 @@ package ExtUtils::TBone;
 
 ExtUtils::TBone - a "skeleton" for writing "t/*.t" test files.
 
-
 =head1 SYNOPSIS
 
 Include a copy of this module in your t directory (as t/ExtUtils/TBone.pm),
