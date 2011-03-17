@@ -2523,10 +2523,10 @@ This usage implements (and deprecates) the C<sendmail()> method.
 =item "smtp", [HOSTNAME, [NAMEDPARMS] ]
 
 Send a message by SMTP, using optional HOSTNAME as SMTP-sending host.
-Uses the L<send_by_smtp()|/send_by_smtp> method. Any additional
-arguments passed in will also be passed through to send_by_smtp.
-This is useful for things like mail servers requiring authentication
-where you can say something like the following
+L<Net::SMTP> will be required.  Uses the L<send_by_smtp()|/send_by_smtp>
+method. Any additional arguments passed in will also be passed through to
+send_by_smtp.  This is useful for things like mail servers requiring
+authentication where you can say something like the following
 
   MIME::Lite->send('smtp', $host, AuthUser=>$user, AuthPass=>$pass);
 
@@ -2740,7 +2740,8 @@ sub send_by_sendmail {
 =item send_by_smtp REF, HOST, ARGS
 
 I<Instance method.>
-Send message via SMTP, using Net::SMTP.
+Send message via SMTP, using Net::SMTP -- which will be required for this
+feature.
 
 HOST is the name of SMTP server to connect to, or undef to have
 L<Net::SMTP|Net::SMTP> use the defaults in Libnet.cfg.
@@ -3603,10 +3604,10 @@ MIME::Lite.
 =head1 HELPER MODULES
 
 MIME::Lite works nicely with other certain other modules if they are present.
-Good to have installed is the latest L<MIME::Types|MIME::Types>,
+Good to have installed are the latest L<MIME::Types|MIME::Types>,
 L<Mail::Address|Mail::Address>, L<MIME::Base64|MIME::Base64>,
-L<MIME::QuotedPrint|MIME::QuotedPrint>.  L<Email::Date::Format> is strictly
-required.
+L<MIME::QuotedPrint|MIME::QuotedPrint>, and L<Net::SMTP>.
+L<Email::Date::Format> is strictly required.
 
 If they aren't present then some functionality won't work, and other features
 wont be as efficient or up to date as they could be. Nevertheless they are optional
