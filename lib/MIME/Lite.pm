@@ -2559,7 +2559,7 @@ need to do is change that line in the setup and you're done.
 All of your $msg-E<gt>send invocations will work as expected.
 
 After sending, the method last_send_successful() can be used to determine
-if the send was succesful or not.
+if the send was successful or not.
 
 =cut
 
@@ -2660,7 +2660,7 @@ Thus:
 =back
 
 After sending, the method last_send_successful() can be used to determine
-if the send was succesful or not.
+if the send was successful or not.
 
 =cut
 
@@ -2825,7 +2825,7 @@ I<Returns:>
 True on success, croaks with an error message on failure.
 
 After sending, the method last_send_successful() can be used to determine
-if the send was succesful or not.
+if the send was successful or not.
 
 =cut
 
@@ -3623,8 +3623,8 @@ The ./examples directory contains a number of snippets in prepared
 form, generally they are documented, but they should be easy to understand.
 
 The ./contrib directory contains a companion/tool modules that come bundled
-with MIME::Lite, they dont get installed by default. Please review the POD they
-come with.
+with MIME::Lite, they don't get installed by default. Please review the POD
+they come with.
 
 =head1 BUGS
 
@@ -3644,7 +3644,7 @@ please include the output of the relevent file. This is the only redeeming
 feature of not using Test::More that I can see.
 
 Bug fixes / Patches / Contribution are welcome, however I probably won't apply
-them unless they also have an associated test. This means that if I dont have
+them unless they also have an associated test. This means that if I don't have
 the time to write the test the patch wont get applied, so please, include tests
 for any patches you provide.
 
