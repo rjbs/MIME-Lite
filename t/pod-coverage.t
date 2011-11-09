@@ -5,6 +5,9 @@ eval "use Test::Pod::Coverage 1.08";
 plan skip_all => "Test::Pod::Coverage 1.08 required for testing POD coverage"
   if $@;
 
+plan skip_all => "set RELEASE_TESTING to run this test"
+  unless $ENV{RELEASE_TESTING};
+
 TODO: {
   local $TODO = "need to hash out what's what";
 
