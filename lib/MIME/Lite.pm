@@ -352,7 +352,7 @@ use vars qw(
 
 
 # GLOBALS, EXTERNAL/CONFIGURATION...
-$VERSION = '3.027';
+$VERSION = '3.028';
 
 ### Automatically interpret CC/BCC for SMTP:
 $AUTO_CC = 1;
@@ -3650,7 +3650,7 @@ for any patches you provide.
 
 =head1 VERSION
 
-Version: 3.027
+Version: 3.028
 
 =head1 CHANGE LOG
 

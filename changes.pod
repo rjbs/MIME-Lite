@@ -2,6 +2,10 @@
 
 =over 4
 
+=item Version 3.028
+
+Various documentation fixes
+
 =item Version 3.027
 
 Add send_to_testfile method (Thanks, AlexanderBecker)
