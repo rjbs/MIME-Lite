@@ -2,6 +2,10 @@
 
 =over 4
 
+=item Version 3.029
+
+Allow the MIME-Version header to be replaced (thanks, Florian!)
+
 =item Version 3.028
 
 Various documentation fixes
