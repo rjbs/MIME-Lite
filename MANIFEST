@@ -22,6 +22,7 @@ t/mime-version.t
 t/parts.t
 t/pod.t
 t/pod-coverage.t
+t/sendmail.t
 t/verify.t
 t/types.t
 testin/README

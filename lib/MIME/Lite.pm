@@ -409,7 +409,7 @@ if ( $^O =~ /win32|cygwin/i ) {
 
 ### Our sending facilities:
 my %SenderArgs = (
-  sendmail  => [$SENDMAIL ? "$SENDMAIL -t -oi -oem" : undef],
+  sendmail  => [],
   smtp      => [],
   sub       => [],
 );
@@ -2705,6 +2705,9 @@ sub send_by_sendmail {
 
         ### Start with the command and basic args:
         my @cmd = ( $p{Sendmail}, @{ $p{BaseArgs} || [ '-t', '-oi', '-oem' ] } );
+
+        # SetSender default is true
+        $p{SetSender} = 1 unless defined $p{SetSender};
 
         ### See if we are forcibly setting the sender:
         $p{SetSender} ||= defined( $p{FromSender} );
