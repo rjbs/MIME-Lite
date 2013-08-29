@@ -1424,7 +1424,7 @@ sub fields {
         ### Create parallel array to @fields, called @ranked.
         ### It contains fields tagged with numbers like 2003, where the
         ### 3 is the original 0-based position, and 2000 indicates that
-        ### we wanted ths type of field to go second.
+        ### we wanted this type of field to go second.
         my @ranked = map {
             [ ( $_ + 1000 * ( $rank{ lc( $fields[$_][0] ) } || ( 2 + $#order ) ) ), $fields[$_] ]
         } ( 0 .. $#fields );
@@ -1479,9 +1479,9 @@ with set() or replace().  Returns the text of the field.
     $ml->get('Subject', 0);
 
 If the optional 0-based INDEX is given, then we return the INDEX'th
-occurence of field TAG.  Otherwise, we look at the context:
-In a scalar context, only the first (0th) occurence of the
-field is returned; in an array context, I<all> occurences are returned.
+occurrence of field TAG.  Otherwise, we look at the context:
+In a scalar context, only the first (0th) occurrence of the
+field is returned; in an array context, I<all> occurrences are returned.
 
 I<Warning:> this should only be used with non-MIME fields.
 Behavior with MIME fields is TBD, and will raise an exception for now.
@@ -1530,7 +1530,7 @@ it's not in the MIME RFCs, it's an HTTP thing), this seems pretty fair.
 # Miko's note: I wasn't quite sure how to handle this, so I waited to hear
 # what you think.  Given that the content-length isn't always required,
 # and given the performance cost of calculating it from a file handle,
-# I thought it might make more sense to add some some sort of computelength
+# I thought it might make more sense to add some sort of computelength
 # property. If computelength is false, then the length simply isn't
 # computed.  What do you think?
 #
@@ -1614,7 +1614,7 @@ sub preamble {
 =item replace TAG,VALUE
 
 I<Instance method.>
-Delete all occurences of fields named TAG, and add a new
+Delete all occurrences of fields named TAG, and add a new
 field with the given VALUE.  TAG is converted to all-lowercase.
 
 B<Beware> the special MIME fields (MIME-version, Content-*):
@@ -2475,7 +2475,7 @@ how mail will be sent.
 I<As a class method> with a HOW argument and optional HOWARGS, it sets
 the default sending mechanism that the no-argument instance method
 will use.  The HOW is a facility name (B<see below>),
-and the HOWARGS is interpreted by the facilty.
+and the HOWARGS is interpreted by the facility.
 The class method returns the previous HOW and HOWARGS as an array.
 
     MIME::Lite->send('sendmail', "d:\\programs\\sendmail.exe");
@@ -2785,7 +2785,7 @@ See L<Net::SMTP::mail()|Net::SMTP/mail> for details.
 
 =item SkipBad
 
-If true doesnt throw an error when multiple email addresses are provided
+If true doesn't throw an error when multiple email addresses are provided
 and some are not valid. See L<Net::SMTP::recipient()|Net::SMTP/recipient>
 for details.
 
@@ -2817,7 +2817,7 @@ This value overrides that.
 Sets the email address to send from. Normally this value is extracted
 from the Return-Path: or From: field of the mail itself (in that order).
 
-This value overides that.
+This value overrides that.
 
 =back
 
@@ -3640,7 +3640,7 @@ based around an interesting but non standard test framework. I'd like to change
 it over to using Test::More.
 
 Should tests fail please review the ./testout directory, and in any bug reports
-please include the output of the relevent file. This is the only redeeming
+please include the output of the relevant file. This is the only redeeming
 feature of not using Test::More that I can see.
 
 Bug fixes / Patches / Contribution are welcome, however I probably won't apply
