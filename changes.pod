@@ -2,6 +2,11 @@
 
 =over 4
 
+=item Version 3.030
+
+Make send_by_sendmail set sender like documentation says it does (thanks,
+Michael Schout!)
+
 =item Version 3.029
 
 Allow the MIME-Version header to be replaced (thanks, Florian!)
