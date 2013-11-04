@@ -52,7 +52,7 @@ WriteMakefile(
   (eval { ExtUtils::MakeMaker->VERSION(6.46) }
     ? (META_MERGE => {
         resources => {
-          Repository => 'http://github.com/rjbs/mime-lite'
+          repository => 'http://github.com/rjbs/MIME-Lite'
         }
       })
     : ()
