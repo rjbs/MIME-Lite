@@ -3102,8 +3102,14 @@ sub get {
         
         shift @{ $self->{generators} };
         
-        ### Need boundary after each part
-        return \$self->{boundary} if $self->{boundary};
+        if ($self->{boundary}) {
+            if (@{ $self->{generators} }) {
+                return \"\n--$self->{boundary}\n";
+            }
+            
+            ### Boundary at the end
+            return \"\n--$self->{boundary}--\n\n";
+        }
     }
     
     ### What we should to generate
@@ -3127,12 +3133,11 @@ sub get {
 
             ### Parts:
             my $part;
-            foreach $part ( @{ $self->{Parts} } ) {
+            foreach $part ( @{ $self->{msg}{Parts} } ) {
                 push @{ $self->{generators} }, $self->new($part, $self->{out}, $self->{is_smtp});
             }
             
-            ### Need boundary before first part
-            $$rv .= $self->{boundary} if $part;
+            $$rv .= "\n--$self->{boundary}\n" if $part;
         } elsif ( $type =~ m{^message/} ) {
             my @parts = @{ $self->{msg}{Parts} };
 
@@ -3160,16 +3165,17 @@ sub get {
 sub get_encoded_chunk {
     my $self = shift;
     
-    if ($self->{state} eq 'first' && $MIME::Lite::DEBUG) {
+    if ($self->{state} eq 'first') {
         $self->{state} = '';
-        warn "M::L >>> Encoding using $self->{encoding}, is_smtp=" . ( $self->{is_smtp} || 0 ) . "\n";
+        warn "M::L >>> Encoding using $self->{encoding}, is_smtp=" . ( $self->{is_smtp} || 0 ) . "\n"
+            if $MIME::Lite::DEBUG;
         
         ### Open file if necessary:
         unless (defined $self->{msg}{Data}) {
             if ( defined( $self->{msg}{Path} ) ) {
                 $self->{fh} = new FileHandle || Carp::croak "can't get new filehandle\n";
-                $self->{fh}->open("$self->{msg}{Path}")
-                or Carp::croak "open $self->{msg}{Path}: $!\n";
+                $self->{fh}->open($self->{msg}{Path})
+                    or Carp::croak "open $self->{msg}{Path}: $!\n";
             } else {
                 $self->{fh} = $self->{msg}{FH};
             }
@@ -3192,7 +3198,7 @@ sub get_encoded_chunk_data_qp {
     ### Encode it line by line:
     if ($self->{untainted} =~ m{^(.*[\r\n]*)}smg) {
         my $line = $1; # copy to avoid weird bug; rt 39334
-        return \encode_qp($line);
+        return \MIME::Lite::encode_qp($line);
     }
     
     $self->{has_chunk} = 0;
@@ -3205,19 +3211,19 @@ sub get_encoded_chunk_data_other {
     
     if ($self->{encoding} eq 'BINARY') {
         $self->{is_smtp} and $self->{msg}{Data} =~ s/(?!\r)\n\z/\r/;
-        return \$self->{Data};
+        return \$self->{msg}{Data};
     }
     
     if ($self->{encoding} eq '8BIT') {
-        return \encode_8bit( $self->{Data} );
+        return \MIME::Lite::encode_8bit( $self->{msg}{Data} );
     }
     
     if ($self->{encoding} eq '7BIT') {
-        return \encode_7bit( $self->{Data} );
+        return \MIME::Lite::encode_7bit( $self->{msg}{Data} );
     }
     
     if ($self->{encoding} eq 'BASE64') {
-        return \encode_base64( $self->{Data} );
+        return \MIME::Lite::encode_base64( $self->{msg}{Data} );
     }
 }
 
@@ -3228,8 +3234,7 @@ sub get_encoded_chunk_fh_binary {
     if ( read( $self->{fh}, $_, 2048 ) ) {
         $rv = $self->{last};
         $self->{last} = $_;
-    }
-    else {
+    } else {
         $self->{has_chunk} = 0;
         if ( length $self->{last} ) {
             $self->{is_smtp} and $self->{last} =~ s/(?!\r)\n\z/\r/;
@@ -3244,7 +3249,7 @@ sub get_encoded_chunk_fh_8bit {
     my $self = shift;
     
     if ( defined( $_ = readline( $self->{fh} ) ) ) {
-        return \encode_8bit($_);
+        return \MIME::Lite::encode_8bit($_);
     }
     
     $self->{has_chunk} = 0;
@@ -3255,7 +3260,7 @@ sub get_encoded_chunk_fh_7bit {
     my $self = shift;
     
     if ( defined( $_ = readline( $self->{fh} ) ) ) {
-        return \encode_7bit($_);
+        return \MIME::Lite::encode_7bit($_);
     }
     
     $self->{has_chunk} = 0;
@@ -3267,7 +3272,7 @@ sub get_encoded_chunk_fh_qp {
     
     
     if ( defined( $_ = readline( $self->{fh} ) ) ) {
-        return \encode_qp($_);
+        return \MIME::Lite::encode_qp($_);
     }
     
     $self->{has_chunk} = 0;
@@ -3278,7 +3283,7 @@ sub get_encoded_chunk_fh_base64 {
     my $self = shift;
     
     if ( read( $self->{fh}, $_, 45 ) ) {
-        return \encode_base64($_);
+        return \MIME::Lite::encode_base64($_);
     }
     
     $self->{has_chunk} = 0;
@@ -3286,8 +3291,7 @@ sub get_encoded_chunk_fh_base64 {
 }
 
 sub get_encoded_chunk_unknown {
-    my $self = shift;
-    Carp::croak "unsupported encoding: `$self->{encoding}'\n";
+    Carp::croak "unsupported encoding: `$_[0]->{encoding}'\n";
 }
 
 sub get_encoded_chunk_nodata {
