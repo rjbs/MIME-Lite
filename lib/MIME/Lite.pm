@@ -2149,7 +2149,7 @@ B<Fatal exception> raised if unable to open any of the input files,
 or if a part contains no data, or if an unsupported encoding is
 encountered.
 
-IS_SMPT is a special option to handle SMTP mails a little more
+IS_SMTP is a special option to handle SMTP mails a little more
 intelligently than other send mechanisms may require. Specifically this
 ensures that the last byte sent is NOT '\n' (octal \012) if the last two
 bytes are not '\r\n' (\015\012) as this will cause some SMTP servers to
@@ -2164,12 +2164,30 @@ sub print_body {
     ### Coerce into a printable output handle:
     $out = MIME::Lite::IO_Handle->wrap($out);
 
-    my $generator = MIME::Lite::Body_Generator->new($self, $out, $is_smtp);
+    my $generator = MIME::Lite::Body_Generator->new($self, $is_smtp);
     while (my $chunk_ref = $generator->get()) {
         $out->print($$chunk_ref);
     }
     
     1;
+}
+
+#------------------------------
+
+=item body_generator MSG [IS_SMTP]
+
+I<Instance method.>
+Returns body generator object which has C<get> method. C<get> will return
+reference to the next chunk of the body (reference to the string) or false
+at the end of the body. This is useful when you need to write generated message
+somewhere and C<print_body> is not good enough for you (you are under non-blocking event
+loop, for example) and C<body_as_string> will eat too much memory.
+
+=cut
+
+
+sub body_generator {
+    MIME::Lite::Body_Generator->new(@_);
 }
 
 #------------------------------
@@ -3047,7 +3065,7 @@ package MIME::Lite::Body_Generator;
 #============================================================
 
 sub new {
-    my ( $class, $msg, $out, $is_smtp ) = @_;
+    my ( $class, $msg, $is_smtp ) = @_;
     
     my $encoding = uc( $msg->{Attrs}{'content-transfer-encoding'} );
     my $chunk_getter;
@@ -3081,7 +3099,6 @@ sub new {
     
     bless {
         msg          => $msg,
-        out          => $out,
         is_smtp      => $is_smtp,
         generators   => [],
         has_chunk    => 0,
