@@ -3127,17 +3127,18 @@ sub get {
             $self->{boundary} = $sub_attrs->{'content-type'}{'boundary'};
 
             ### Preamble:
-            $rv = defined( $self->{msg}{Preamble} )
-                      ? \$self->{msg}{Preamble}
-                      : \"This is a multi-part message in MIME format.\n";
+            $rv = \((
+                    defined( $self->{msg}{Preamble} )
+                      ? $self->{msg}{Preamble}
+                      : "This is a multi-part message in MIME format.\n"
+                    ) .
+                     "\n--$self->{boundary}\n");
 
             ### Parts:
             my $part;
             foreach $part ( @{ $self->{msg}{Parts} } ) {
                 push @{ $self->{generators} }, $self->new($part, $self->{out}, $self->{is_smtp});
             }
-            
-            $$rv .= "\n--$self->{boundary}\n" if $part;
         } elsif ( $type =~ m{^message/} ) {
             my @parts = @{ $self->{msg}{Parts} };
 
@@ -3181,6 +3182,9 @@ sub get_encoded_chunk {
             }
             CORE::binmode($self->{fh}) if $self->{msg}->binmode;
         }
+        
+        ### Headers first
+        return \($self->{msg}->header_as_string . "\n");
     }
       
     my $chunk_getter = $self->{chunk_getter};
