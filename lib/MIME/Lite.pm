@@ -352,7 +352,7 @@ use vars qw(
 
 
 # GLOBALS, EXTERNAL/CONFIGURATION...
-$VERSION = '3.030';
+$VERSION = '3.031';
 
 ### Automatically interpret CC/BCC for SMTP:
 $AUTO_CC = 1;
@@ -3064,6 +3064,12 @@ package MIME::Lite::Body_Generator;
 
 #============================================================
 
+use constant {
+    STATE_OTHER => 0,
+    STATE_INIT  => 1,
+    STATE_FIRST => 2,
+};
+
 sub new {
     my ( $class, $msg, $is_smtp ) = @_;
     
@@ -3072,29 +3078,29 @@ sub new {
     if (defined( $msg->{Path} ) || defined( $msg->{FH} ) || defined ( $msg->{Data} )) {
         if ($encoding eq 'BINARY') {
             $chunk_getter = defined ( $msg->{Data} )
-                             ? 'get_encoded_chunk_data_other'
-                             : 'get_encoded_chunk_fh_binary';
+                             ? \&get_encoded_chunk_data_other
+                             : \&get_encoded_chunk_fh_binary;
         } elsif ($encoding eq '8BIT') {
             $chunk_getter = defined ( $msg->{Data} )
-                             ? 'get_encoded_chunk_data_other'
-                             : 'get_encoded_chunk_fh_8bit';
+                             ? \&get_encoded_chunk_data_other
+                             : \&get_encoded_chunk_fh_8bit;
         } elsif ($encoding eq '7BIT') {
             $chunk_getter = defined ( $msg->{Data} )
-                             ? 'get_encoded_chunk_data_other'
-                             : 'get_encoded_chunk_fh_7bit';
+                             ? \&get_encoded_chunk_data_other
+                             : \&get_encoded_chunk_fh_7bit;
         } elsif ($encoding eq 'QUOTED-PRINTABLE') {
             $chunk_getter = defined ( $msg->{Data} )
-                             ? 'get_encoded_chunk_data_qp'
-                             : 'get_encoded_chunk_fh_qp';
+                             ? \&get_encoded_chunk_data_qp
+                             : \&get_encoded_chunk_fh_qp;
         } elsif ($encoding eq 'BASE64') {
             $chunk_getter = defined ( $msg->{Data} )
-                             ? 'get_encoded_chunk_data_other'
-                             : 'get_encoded_chunk_fh_base64';
+                             ? \&get_encoded_chunk_data_other
+                             : \&get_encoded_chunk_fh_base64;
         } else {
-            $chunk_getter = 'get_encoded_chunk_unknown';
+            $chunk_getter = \&get_encoded_chunk_unknown;
         }
     } else {
-        $chunk_getter = 'get_encoded_chunk_nodata';
+        $chunk_getter = \&get_encoded_chunk_nodata;
     }
     
     bless {
@@ -3102,7 +3108,7 @@ sub new {
         is_smtp      => $is_smtp,
         generators   => [],
         has_chunk    => 0,
-        state        => 'init',
+        state        => STATE_INIT,
         encoding     => $encoding,
         chunk_getter => $chunk_getter,
         last         => '',
@@ -3114,8 +3120,9 @@ sub get {
     
     ### Do we have generators for embedded/main part(s)
     while (@{ $self->{generators} }) {
-        my $str_ref = $self->{generators}[0]->get();
-        return $str_ref if $str_ref;
+        if (my $str_ref = $self->{generators}[0]->get()) {
+            return $str_ref;
+        }
         
         shift @{ $self->{generators} };
         
@@ -3130,11 +3137,11 @@ sub get {
     }
     
     ### What we should to generate
-    if ($self->{state} eq 'init') {
+    if ($self->{state} == STATE_INIT) {
         my $attrs = $self->{msg}{Attrs};
         my $sub_attrs = $self->{msg}{SubAttrs};
         my $rv;
-        $self->{state} = 'first';
+        $self->{state} = STATE_FIRST;
         
         ### Output either the body or the parts.
         ###   Notice that we key off of the content-type!  We expect fewer
@@ -3183,8 +3190,8 @@ sub get {
 sub get_encoded_chunk {
     my $self = shift;
     
-    if ($self->{state} eq 'first') {
-        $self->{state} = '';
+    if ($self->{state} == STATE_FIRST) {
+        $self->{state} = STATE_OTHER;
         warn "M::L >>> Encoding using $self->{encoding}, is_smtp=" . ( $self->{is_smtp} || 0 ) . "\n"
             if $MIME::Lite::DEBUG;
         
@@ -3203,9 +3210,8 @@ sub get_encoded_chunk {
         ### Headers first
         return \($self->{msg}->header_as_string . "\n");
     }
-      
-    my $chunk_getter = $self->{chunk_getter};
-    $self->$chunk_getter();
+    
+    $self->{chunk_getter}->($self);
 }
 
 sub get_encoded_chunk_data_qp {
@@ -3232,7 +3238,7 @@ sub get_encoded_chunk_data_other {
     
     if ($self->{encoding} eq 'BINARY') {
         $self->{is_smtp} and $self->{msg}{Data} =~ s/(?!\r)\n\z/\r/;
-        return \$self->{msg}{Data};
+        return \"$self->{msg}{Data}";
     }
     
     if ($self->{encoding} eq '8BIT') {
@@ -3291,7 +3297,6 @@ sub get_encoded_chunk_fh_7bit {
 sub get_encoded_chunk_fh_qp {
     my $self = shift;
     
-    
     if ( defined( $_ = readline( $self->{fh} ) ) ) {
         return \MIME::Lite::encode_qp($_);
     }
@@ -3303,7 +3308,9 @@ sub get_encoded_chunk_fh_qp {
 sub get_encoded_chunk_fh_base64 {
     my $self = shift;
     
-    if ( read( $self->{fh}, $_, 45 ) ) {
+    ### 1539 % 3 == 0 && 1539/3*4 % 76 == 0
+    ### encode_base64 allows 76 symbols per line
+    if ( read( $self->{fh}, $_, 1539 ) ) {
         return \MIME::Lite::encode_base64($_);
     }
     
