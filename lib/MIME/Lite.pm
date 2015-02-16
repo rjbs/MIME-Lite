@@ -352,7 +352,7 @@ use vars qw(
 
 
 # GLOBALS, EXTERNAL/CONFIGURATION...
-$VERSION = '3.030';
+$VERSION = '3.031';
 
 ### Automatically interpret CC/BCC for SMTP:
 $AUTO_CC = 1;
@@ -2149,7 +2149,7 @@ B<Fatal exception> raised if unable to open any of the input files,
 or if a part contains no data, or if an unsupported encoding is
 encountered.
 
-IS_SMPT is a special option to handle SMTP mails a little more
+IS_SMTP is a special option to handle SMTP mails a little more
 intelligently than other send mechanisms may require. Specifically this
 ensures that the last byte sent is NOT '\n' (octal \012) if the last two
 bytes are not '\r\n' (\015\012) as this will cause some SMTP servers to
@@ -2160,184 +2160,34 @@ hang.
 
 sub print_body {
     my ( $self, $out, $is_smtp ) = @_;
-    my $attrs = $self->{Attrs};
-    my $sub_attrs = $self->{SubAttrs};
 
     ### Coerce into a printable output handle:
     $out = MIME::Lite::IO_Handle->wrap($out);
 
-    ### Output either the body or the parts.
-    ###   Notice that we key off of the content-type!  We expect fewer
-    ###   accidents that way, since the syntax will always match the MIME type.
-    my $type = $attrs->{'content-type'};
-    if ( $type =~ m{^multipart/}i ) {
-        my $boundary = $sub_attrs->{'content-type'}{'boundary'};
-
-        ### Preamble:
-        $out->print( defined( $self->{Preamble} )
-                     ? $self->{Preamble}
-                     : "This is a multi-part message in MIME format.\n"
-        );
-
-        ### Parts:
-        my $part;
-        foreach $part ( @{ $self->{Parts} } ) {
-            $out->print("\n--$boundary\n");
-            $part->print($out);
-        }
-
-        ### Epilogue:
-        $out->print("\n--$boundary--\n\n");
-    } elsif ( $type =~ m{^message/} ) {
-        my @parts = @{ $self->{Parts} };
-
-        ### It's a toss-up; try both data and parts:
-        if ( @parts == 0 ) { $self->print_simple_body( $out, $is_smtp ) }
-        elsif ( @parts == 1 ) { $parts[0]->print($out) }
-        else { Carp::croak "can't handle message with >1 part\n"; }
-    } else {
-        $self->print_simple_body( $out, $is_smtp );
+    my $generator = MIME::Lite::Body_Generator->new($self, $is_smtp);
+    while (my $chunk_ref = $generator->get()) {
+        $out->print($$chunk_ref);
     }
+    
     1;
 }
 
 #------------------------------
-#
-# print_simple_body [OUTHANDLE]
-#
-# I<Instance method, private.>
-# Print the body of a simple singlepart message to the given
-# output handle, or to the currently-selected filehandle if none
-# was given.
-#
-# Note that if you want to print "the portion after
-# the header", you don't want this method: you want
-# L<print_body()|/print_body>.
-#
-# All OUTHANDLE has to be is a filehandle (possibly a glob ref), or
-# any object that responds to a print() message.
-#
-# B<Fatal exception> raised if unable to open any of the input files,
-# or if a part contains no data, or if an unsupported encoding is
-# encountered.
-#
-sub print_simple_body {
-    my ( $self, $out, $is_smtp ) = @_;
-    my $attrs = $self->{Attrs};
 
-    ### Coerce into a printable output handle:
-    $out = MIME::Lite::IO_Handle->wrap($out);
+=item body_generator MSG [IS_SMTP]
 
-    ### Get content-transfer-encoding:
-    my $encoding = uc( $attrs->{'content-transfer-encoding'} );
-    warn "M::L >>> Encoding using $encoding, is_smtp=" . ( $is_smtp || 0 ) . "\n"
-      if $MIME::Lite::DEBUG;
+I<Instance method.>
+Returns body generator object which has C<get> method. C<get> will return
+reference to the next chunk of the body (reference to the string) or false
+at the end of the body. This is useful when you need to write generated message
+somewhere and C<print_body> is not good enough for you (you are under non-blocking event
+loop, for example) and C<body_as_string> will eat too much memory.
 
-    ### Notice that we don't just attempt to slurp the data in from a file:
-    ### by processing files piecemeal, we still enable ourselves to prepare
-    ### very large MIME messages...
+=cut
 
-    ### Is the data in-core?  If so, blit it out...
-    if ( defined( $self->{Data} ) ) {
-      DATA:
-        {
-            local $_ = $encoding;
 
-            /^BINARY$/ and do {
-                $is_smtp and $self->{Data} =~ s/(?!\r)\n\z/\r/;
-                $out->print( $self->{Data} );
-                last DATA;
-            };
-            /^8BIT$/ and do {
-                $out->print( encode_8bit( $self->{Data} ) );
-                last DATA;
-            };
-            /^7BIT$/ and do {
-                $out->print( encode_7bit( $self->{Data} ) );
-                last DATA;
-            };
-            /^QUOTED-PRINTABLE$/ and do {
-                ### UNTAINT since m//mg on tainted data loops forever:
-                my ($untainted) = ( $self->{Data} =~ m/\A(.*)\Z/s );
-
-                ### Encode it line by line:
-                while ( $untainted =~ m{^(.*[\r\n]*)}smg ) {
-                    ### have to do it line by line...
-                    my $line = $1; # copy to avoid weird bug; rt 39334
-                    $out->print( encode_qp($line) );
-                }
-                last DATA;
-            };
-            /^BASE64/ and do {
-                $out->print( encode_base64( $self->{Data} ) );
-                last DATA;
-            };
-            Carp::croak "unsupported encoding: `$_'\n";
-        }
-    }
-
-    ### Else, is the data in a file?  If so, output piecemeal...
-    ###    Miko's note: this routine pretty much works the same with a path
-    ###    or a filehandle. the only difference in behaviour is that it does
-    ###    not attempt to open anything if it already has a filehandle
-    elsif ( defined( $self->{Path} ) || defined( $self->{FH} ) ) {
-        no strict 'refs';    ### in case FH is not an object
-        my $DATA;
-
-        ### Open file if necessary:
-        if ( defined( $self->{Path} ) ) {
-            $DATA = new FileHandle || Carp::croak "can't get new filehandle\n";
-            $DATA->open("$self->{Path}")
-              or Carp::croak "open $self->{Path}: $!\n";
-        } else {
-            $DATA = $self->{FH};
-        }
-        CORE::binmode($DATA) if $self->binmode;
-
-        ### Encode piece by piece:
-      PATH:
-        {
-            local $_ = $encoding;
-
-            /^BINARY$/ and do {
-                my $last = "";
-                while ( read( $DATA, $_, 2048 ) ) {
-                    $out->print($last) if length $last;
-                    $last = $_;
-                }
-                if ( length $last ) {
-                    $is_smtp and $last =~ s/(?!\r)\n\z/\r/;
-                    $out->print($last);
-                }
-                last PATH;
-            };
-            /^8BIT$/ and do {
-                $out->print( encode_8bit($_) ) while (<$DATA>);
-                last PATH;
-            };
-            /^7BIT$/ and do {
-                $out->print( encode_7bit($_) ) while (<$DATA>);
-                last PATH;
-            };
-            /^QUOTED-PRINTABLE$/ and do {
-                $out->print( encode_qp($_) ) while (<$DATA>);
-                last PATH;
-            };
-            /^BASE64$/ and do {
-                $out->print( encode_base64($_) ) while ( read( $DATA, $_, 45 ) );
-                last PATH;
-            };
-            Carp::croak "unsupported encoding: `$_'\n";
-        }
-
-        ### Close file:
-        close $DATA if defined( $self->{Path} );
-    }
-
-    else {
-        Carp::croak "no data in this part\n";
-    }
-    1;
+sub body_generator {
+    MIME::Lite::Body_Generator->new(@_);
 }
 
 #------------------------------
@@ -3206,6 +3056,274 @@ sub print {
     my $self = shift;
     push @$self, @_;
     1;
+}
+
+#============================================================
+
+package MIME::Lite::Body_Generator;
+
+#============================================================
+
+use constant {
+    STATE_OTHER => 0,
+    STATE_INIT  => 1,
+    STATE_FIRST => 2,
+};
+
+sub new {
+    my ( $class, $msg, $is_smtp ) = @_;
+    
+    my $encoding = uc( $msg->{Attrs}{'content-transfer-encoding'} );
+    my $chunk_getter;
+    if (defined( $msg->{Path} ) || defined( $msg->{FH} ) || defined ( $msg->{Data} )) {
+        if ($encoding eq 'BINARY') {
+            $chunk_getter = defined ( $msg->{Data} )
+                             ? \&get_encoded_chunk_data_other
+                             : \&get_encoded_chunk_fh_binary;
+        } elsif ($encoding eq '8BIT') {
+            $chunk_getter = defined ( $msg->{Data} )
+                             ? \&get_encoded_chunk_data_other
+                             : \&get_encoded_chunk_fh_8bit;
+        } elsif ($encoding eq '7BIT') {
+            $chunk_getter = defined ( $msg->{Data} )
+                             ? \&get_encoded_chunk_data_other
+                             : \&get_encoded_chunk_fh_7bit;
+        } elsif ($encoding eq 'QUOTED-PRINTABLE') {
+            $chunk_getter = defined ( $msg->{Data} )
+                             ? \&get_encoded_chunk_data_qp
+                             : \&get_encoded_chunk_fh_qp;
+        } elsif ($encoding eq 'BASE64') {
+            $chunk_getter = defined ( $msg->{Data} )
+                             ? \&get_encoded_chunk_data_other
+                             : \&get_encoded_chunk_fh_base64;
+        } else {
+            $chunk_getter = \&get_encoded_chunk_unknown;
+        }
+    } else {
+        $chunk_getter = \&get_encoded_chunk_nodata;
+    }
+    
+    bless {
+        msg          => $msg,
+        is_smtp      => $is_smtp,
+        generators   => [],
+        has_chunk    => 0,
+        state        => STATE_INIT,
+        encoding     => $encoding,
+        chunk_getter => $chunk_getter,
+        last         => '',
+    }, ref($class) ? ref($class) : $class;
+}
+
+sub get {
+    my $self = shift;
+    
+    ### Do we have generators for embedded/main part(s)
+    while (@{ $self->{generators} }) {
+        if (my $str_ref = $self->{generators}[0]->get()) {
+            return $str_ref;
+        }
+        
+        shift @{ $self->{generators} };
+        
+        if ($self->{boundary}) {
+            if (@{ $self->{generators} }) {
+                return \"\n--$self->{boundary}\n";
+            }
+            
+            ### Boundary at the end
+            return \"\n--$self->{boundary}--\n\n";
+        }
+    }
+    
+    ### What we should to generate
+    if ($self->{state} == STATE_INIT) {
+        my $attrs = $self->{msg}{Attrs};
+        my $sub_attrs = $self->{msg}{SubAttrs};
+        my $rv;
+        $self->{state} = STATE_FIRST;
+        
+        ### Output either the body or the parts.
+        ###   Notice that we key off of the content-type!  We expect fewer
+        ###   accidents that way, since the syntax will always match the MIME type.
+        my $type = $attrs->{'content-type'};
+        if ( $type =~ m{^multipart/}i ) {
+            $self->{boundary} = $sub_attrs->{'content-type'}{'boundary'};
+
+            ### Preamble:
+            $rv = \((
+                    defined( $self->{msg}{Preamble} )
+                      ? $self->{msg}{Preamble}
+                      : "This is a multi-part message in MIME format.\n"
+                    ) .
+                     "\n--$self->{boundary}\n");
+
+            ### Parts:
+            my $part;
+            foreach $part ( @{ $self->{msg}{Parts} } ) {
+                push @{ $self->{generators} }, $self->new($part, $self->{out}, $self->{is_smtp});
+            }
+        } elsif ( $type =~ m{^message/} ) {
+            my @parts = @{ $self->{msg}{Parts} };
+
+            ### It's a toss-up; try both data and parts:
+            if ( @parts == 0 ) {
+                $self->{has_chunk} = 1;
+                $rv = $self->get_encoded_chunk()
+            } elsif ( @parts == 1 ) { 
+                $self->{generators}[0] = $self->new($parts[0], $self->{out}, $self->{is_smtp});
+                $rv = $self->{generators}[0]->get();
+            } else {
+                Carp::croak "can't handle message with >1 part\n";
+            }
+        } else {
+            $self->{has_chunk} = 1;
+            $rv = $self->get_encoded_chunk();
+        }
+        
+        return $rv;
+    }
+    
+    return $self->{has_chunk} ? $self->get_encoded_chunk() : undef;
+}
+
+sub get_encoded_chunk {
+    my $self = shift;
+    
+    if ($self->{state} == STATE_FIRST) {
+        $self->{state} = STATE_OTHER;
+        warn "M::L >>> Encoding using $self->{encoding}, is_smtp=" . ( $self->{is_smtp} || 0 ) . "\n"
+            if $MIME::Lite::DEBUG;
+        
+        ### Open file if necessary:
+        unless (defined $self->{msg}{Data}) {
+            if ( defined( $self->{msg}{Path} ) ) {
+                $self->{fh} = new FileHandle || Carp::croak "can't get new filehandle\n";
+                $self->{fh}->open($self->{msg}{Path})
+                    or Carp::croak "open $self->{msg}{Path}: $!\n";
+            } else {
+                $self->{fh} = $self->{msg}{FH};
+            }
+            CORE::binmode($self->{fh}) if $self->{msg}->binmode;
+        }
+        
+        ### Headers first
+        return \($self->{msg}->header_as_string . "\n");
+    }
+    
+    $self->{chunk_getter}->($self);
+}
+
+sub get_encoded_chunk_data_qp {
+    my $self = shift;
+    
+    unless ( defined( $self->{untainted} ) ) {
+        ### UNTAINT since m//mg on tainted data loops forever:
+        $self->{untainted} = ( $self->{msg}{Data} =~ m/\A(.*)\Z/s );
+    }
+    
+    ### Encode it line by line:
+    if ($self->{untainted} =~ m{^(.*[\r\n]*)}smg) {
+        my $line = $1; # copy to avoid weird bug; rt 39334
+        return \MIME::Lite::encode_qp($line);
+    }
+    
+    $self->{has_chunk} = 0;
+    return;
+}
+
+sub get_encoded_chunk_data_other {
+    my $self = shift;
+    $self->{has_chunk} = 0;
+    
+    if ($self->{encoding} eq 'BINARY') {
+        $self->{is_smtp} and $self->{msg}{Data} =~ s/(?!\r)\n\z/\r/;
+        return \"$self->{msg}{Data}";
+    }
+    
+    if ($self->{encoding} eq '8BIT') {
+        return \MIME::Lite::encode_8bit( $self->{msg}{Data} );
+    }
+    
+    if ($self->{encoding} eq '7BIT') {
+        return \MIME::Lite::encode_7bit( $self->{msg}{Data} );
+    }
+    
+    if ($self->{encoding} eq 'BASE64') {
+        return \MIME::Lite::encode_base64( $self->{msg}{Data} );
+    }
+}
+
+sub get_encoded_chunk_fh_binary {
+    my $self = shift;
+    my $rv;
+    
+    if ( read( $self->{fh}, $_, 2048 ) ) {
+        $rv = $self->{last};
+        $self->{last} = $_;
+    } else {
+        $self->{has_chunk} = 0;
+        if ( length $self->{last} ) {
+            $self->{is_smtp} and $self->{last} =~ s/(?!\r)\n\z/\r/;
+            $rv = $self->{last};
+        }
+    }
+    
+    return defined($rv) ? \$rv : undef;
+}
+
+sub get_encoded_chunk_fh_8bit {
+    my $self = shift;
+    
+    if ( defined( $_ = readline( $self->{fh} ) ) ) {
+        return \MIME::Lite::encode_8bit($_);
+    }
+    
+    $self->{has_chunk} = 0;
+    return;
+}
+
+sub get_encoded_chunk_fh_7bit {
+    my $self = shift;
+    
+    if ( defined( $_ = readline( $self->{fh} ) ) ) {
+        return \MIME::Lite::encode_7bit($_);
+    }
+    
+    $self->{has_chunk} = 0;
+    return;
+}
+
+sub get_encoded_chunk_fh_qp {
+    my $self = shift;
+    
+    if ( defined( $_ = readline( $self->{fh} ) ) ) {
+        return \MIME::Lite::encode_qp($_);
+    }
+    
+    $self->{has_chunk} = 0;
+    return;
+}
+
+sub get_encoded_chunk_fh_base64 {
+    my $self = shift;
+    
+    ### 1539 % 3 == 0 && 1539/3*4 % 76 == 0
+    ### encode_base64 allows 76 symbols per line
+    if ( read( $self->{fh}, $_, 1539 ) ) {
+        return \MIME::Lite::encode_base64($_);
+    }
+    
+    $self->{has_chunk} = 0;
+    return;
+}
+
+sub get_encoded_chunk_unknown {
+    Carp::croak "unsupported encoding: `$_[0]->{encoding}'\n";
+}
+
+sub get_encoded_chunk_nodata {
+    Carp::croak "no data in this part\n";
 }
 
 1;

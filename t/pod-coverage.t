@@ -24,7 +24,6 @@ TODO: {
       my_extract_full_addrs
       my_extract_only_addrs
       print_for_smtp
-      print_simple_body
       send_by_smtp_simple
       send_by_sub
       stringify
