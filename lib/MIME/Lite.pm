@@ -3287,6 +3287,81 @@ By using the Filename option (which is different from Path!):
 
 You should I<not> put path information in the Filename.
 
+=head2 Working with UTF-8 and other character sets
+
+All text that is added to your mail message should be properly encoded.
+MIME::Lite doesn't do this for you. For instance, if you want to
+send your mail in UTF-8, where C<$to>, C<$subject> and C<$text> have
+these values:
+
+=over
+
+=item *
+
+To: "RamE<oacute>n NuE<ntilde>ez E<lt>foo@bar.comE<gt>"
+
+=item *
+
+Subject: "E<iexcl>AquE<iacute> estE<aacute>!"
+
+=item *
+
+Text: "E<iquest>Quieres ganar muchos E<euro>'s?"
+
+=back
+
+
+    use MIME::Lite;
+    use Encode qw(encode encode_utf8 );
+    
+    my $to      = "Ram\363n Nu\361ez <foo\@bar.com>";
+    my $subject = "\241Aqu\355 est\341!";
+    my $text    = "\277Quieres ganar muchos \x{20ac}'s?";
+    
+    ### Create a new message encoded in UTF-8:
+    my $msg = MIME::Lite->new(
+        From    => 'me@myhost.com',
+        To      => encode( 'MIME-Header', $to ),
+        Subject => encode( 'MIME-Header', $subject ),
+        Data    => encode_utf8($text)
+    );
+    $msg->attr( 'content-type' => 'text/plain; charset=utf-8' );
+    $msg->send;
+
+B<Note:>
+
+=over
+
+=item *
+
+The above example assumes that the values you want to encode are in
+Perl's "internal" form, i.e. the strings contain decoded UTF-8
+characters, not the bytes that represent those characters.
+
+See L<perlunitut>, L<perluniintro>, L<perlunifaq> and L<Encode> for
+more.
+
+=item *
+
+If, for the body of the email,  you want to use a character set
+other than UTF-8, then you should encode appropriately, and set the
+correct C<content-type>, eg:
+
+    ...
+    Data => encode('iso-8859-15',$text)
+    ...
+    
+    $msg->attr( 'content-type' => 'text/plain; charset=iso-8859-15' );
+    
+=item *
+
+For the message headers, L<Encode::MIME::Header> only support UTF-8,
+but most modern mail clients should be able to handle this.  It is not
+a problem to have your headers in a different encoding from the message
+body.
+
+=back
+
 =head2 Benign limitations
 
 This is "lite", after all...
