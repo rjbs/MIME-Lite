@@ -2716,7 +2716,7 @@ sub send_by_sendmail {
         if ( $p{SetSender} ) {
             my $from = $p{FromSender} || ( $self->get('From') )[0];
             if ($from) {
-                my ($from_addr) = extract_full_addrs($from);
+                my ($from_addr) = extract_only_addrs($from);
                 push @cmd, "-f$from_addr" if $from_addr;
             }
         }
