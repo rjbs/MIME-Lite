@@ -2844,7 +2844,7 @@ if the send was successful or not.
 
 # external opts
 my @_mail_opts     = qw( Size Return Bits Transaction Envelope );
-my @_recip_opts    = qw( SkipBad );
+my @_recip_opts    = qw( SkipBad Notify );
 my @_net_smtp_opts = qw( Hello LocalAddr LocalPort Timeout
                          AuthUser AuthPass SSL
                          Port ExactAddresses Debug );
