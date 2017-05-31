@@ -15,7 +15,7 @@ my %extra_prereq = (
 for my $module (sort keys %extra_prereq) {
   local $@;
   my $ok = eval "require $module; \$extra_prereq{\$module} && \$module->VERSION(\$extra_prereq{\$module}); 1";
-  delete $extra_prereq{ $module } if $ok;
+  $prereq{ $module } = delete $extra_prereq{ $module } if $ok;
 }
 
 my %prereq = (
