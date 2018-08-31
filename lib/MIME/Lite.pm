@@ -31,7 +31,7 @@ Create and send using the default send method for your OS a single-part message:
     );
     $msg->send; # send via default
 
-Create a multipart message (i.e., one with attachments) and send it SMTP
+Create a multipart message (i.e., one with attachments) and send it via SMTP
 
     ### Create a new multipart message:
     $msg = MIME::Lite->new(
@@ -53,7 +53,7 @@ Create a multipart message (i.e., one with attachments) and send it SMTP
         Filename => 'logo.gif',
         Disposition => 'attachment'
     );
-    ### use Net:SMTP to do the sending
+    ### use Net::SMTP to do the sending
     $msg->send('smtp','some.host', Debug=>1 );
 
 Output a message:
