@@ -79,6 +79,10 @@ with authentication
 
     MIME::Lite->send('smtp','some.host', AuthUser=>$user, AuthPass=>$pass);
 
+using SSL
+
+    MIME::Lite->send('smtp','some.host', SSL => 1, Port => 465 );
+
 =head1 DESCRIPTION
 
 In the never-ending quest for great taste with fewer calories,
@@ -2841,6 +2845,7 @@ if the send was successful or not.
 my @_mail_opts     = qw( Size Return Bits Transaction Envelope );
 my @_recip_opts    = qw( SkipBad );
 my @_net_smtp_opts = qw( Hello LocalAddr LocalPort Timeout
+                         AuthUser AuthPass SSL
                          Port ExactAddresses Debug );
 # internal:  qw( NoAuth AuthUser AuthPass To From Host);
 
