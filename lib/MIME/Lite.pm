@@ -1,6 +1,7 @@
 package MIME::Lite;
+use 5.006;    ### for /c modifier in m/\G.../gc modifier
 use strict;
-require 5.004;    ### for /c modifier in m/\G.../gc modifier
+use warnings;
 
 =head1 NAME
 

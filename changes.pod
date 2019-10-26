@@ -2,6 +2,10 @@
 
 =over 4
 
+=item Version 3.032
+
+Add "use warnings" and require v5.6
+
 =item Version 3.031
 
 Add an SSL option to connect to the SMTP relay via SSL on port 465. (thanks,
