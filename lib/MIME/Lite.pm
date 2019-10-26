@@ -3313,11 +3313,11 @@ Text: "E<iquest>Quieres ganar muchos E<euro>'s?"
 
     use MIME::Lite;
     use Encode qw(encode encode_utf8 );
-    
+
     my $to      = "Ram\363n Nu\361ez <foo\@bar.com>";
     my $subject = "\241Aqu\355 est\341!";
     my $text    = "\277Quieres ganar muchos \x{20ac}'s?";
-    
+
     ### Create a new message encoded in UTF-8:
     my $msg = MIME::Lite->new(
         From    => 'me@myhost.com',
@@ -3350,9 +3350,9 @@ correct C<content-type>, eg:
     ...
     Data => encode('iso-8859-15',$text)
     ...
-    
+
     $msg->attr( 'content-type' => 'text/plain; charset=iso-8859-15' );
-    
+
 =item *
 
 For the message headers, L<Encode::MIME::Header> only support UTF-8,
