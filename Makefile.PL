@@ -9,8 +9,8 @@ use ExtUtils::MakeMaker;
 my %extra_prereq = (
   'Mail::Address'     => 1.62,
   'MIME::Types'       => 1.28,
-  'MIME::Base64'      => undef,
-  'MIME::QuotedPrint' => undef,
+  'MIME::Base64'      => 0,
+  'MIME::QuotedPrint' => 0,
 );
 
 my %prereq = (
