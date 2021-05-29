@@ -2112,7 +2112,8 @@ sub print {
 
     ### Output head, separator, and body:
     $self->verify_data if $AUTO_VERIFY;    ### prevents missing parts!
-    $out->print( $self->header_as_string, "\n" );
+    $out->print( $self->header_as_string );
+    $out->print( "\n" );
     $self->print_body($out);
 }
 
@@ -2135,7 +2136,8 @@ sub print_for_smtp {
     my $header = $self->fields_as_string( \@fields );
 
     ### Output head, separator, and body:
-    $out->print( $header, "\n" );
+    $out->print( $header );
+    $out->print( "\n" );
     $self->print_body( $out, '1' );
 }
 
