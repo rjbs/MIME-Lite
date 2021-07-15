@@ -3465,7 +3465,7 @@ I<send> your message.
 
 B<Note:>
 As of MIME::Lite v3.02 the mail name extraction routines have been
-beefed up considerably. Furthermore if Mail::Address if provided then
+beefed up considerably. Furthermore if Mail::Address is provided then
 name extraction is done using that. Accordingly the above advice is now
 less true than it once was. Funky email names I<should> work properly
 now. However the disclaimer remains. Patches welcome. :-)
@@ -3696,7 +3696,7 @@ L<MIME::QuotedPrint|MIME::QuotedPrint>, and L<Net::SMTP>.
 L<Email::Date::Format> is strictly required.
 
 If they aren't present then some functionality won't work, and other features
-wont be as efficient or up to date as they could be. Nevertheless they are optional
+won't be as efficient or up to date as they could be. Nevertheless they are optional
 extras.
 
 =head1 BUNDLED GOODIES
@@ -3731,7 +3731,7 @@ feature of not using Test::More that I can see.
 
 Bug fixes / Patches / Contribution are welcome, however I probably won't apply
 them unless they also have an associated test. This means that if I don't have
-the time to write the test the patch wont get applied, so please, include tests
+the time to write the test the patch won't get applied, so please, include tests
 for any patches you provide.
 
 =head1 VERSION
