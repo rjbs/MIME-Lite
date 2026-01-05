@@ -64,7 +64,7 @@ foreach my $pair (@pairs) {
 
   is(
     join(' ', map {"<$_>"} @addrs),
-	  $result,
-	  "addrs stringify together as expected",
+    $result,
+    "addrs stringify together as expected",
   );
 }
