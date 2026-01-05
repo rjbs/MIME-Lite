@@ -27,14 +27,9 @@ $part->attach(Data => "attachment 5");
 $T->msg("The message:\n".$msg->stringify);
 
 $T->ok_eqnum(int($msg->parts), 4,
-	     "Does parts() work?");
+       "Does parts() work?");
 
 $T->ok_eqnum(int($msg->parts_DFS), 7,
-	     "Does parts_DFS() work?");
+       "Does parts_DFS() work?");
 
 $T->end;
-
-
-
-
-
