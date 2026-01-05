@@ -1153,7 +1153,7 @@ sub build {
 # top_level ONOFF
 #
 # Set/unset the top-level attributes and headers.
-# This affects "MIME-Version" and "X-Mailer".
+# This affects "MIME-Version", "X-Mailer", and "Date"
 
 sub top_level {
     my ( $self, $onoff ) = @_;
@@ -1166,6 +1166,7 @@ sub top_level {
     } else {
         delete $attrs->{'mime-version'};
         $self->delete('X-Mailer');
+        $self->delete('Date');
     }
 }
 
