@@ -343,44 +343,31 @@ and trusting these other packages to do the right thing.
 use Carp ();
 use FileHandle;
 
-use vars qw(
-  $AUTO_CC
-  $AUTO_CONTENT_TYPE
-  $AUTO_ENCODE
-  $AUTO_VERIFY
-  $PARANOID
-  $QUIET
-  $VANILLA
-  $VERSION
-  $DEBUG
-);
-
-
 # GLOBALS, EXTERNAL/CONFIGURATION...
-$VERSION = '3.034';
+our $VERSION = '3.034';
 
 ### Automatically interpret CC/BCC for SMTP:
-$AUTO_CC = 1;
+our $AUTO_CC = 1;
 
 ### Automatically choose content type from file name:
-$AUTO_CONTENT_TYPE = 0;
+our $AUTO_CONTENT_TYPE = 0;
 
 ### Automatically choose encoding from content type:
-$AUTO_ENCODE = 1;
+our $AUTO_ENCODE = 1;
 
 ### Check paths right before printing:
-$AUTO_VERIFY = 1;
+our $AUTO_VERIFY = 1;
 
 ### Set this true if you don't want to use MIME::Base64/QuotedPrint/Types:
-$PARANOID = 0;
+our $PARANOID = 0;
 
 ### Don't warn me about dangerous activities:
-$QUIET = undef;
+our $QUIET = undef;
 
 ### Unsupported (for tester use): don't qualify boundary with time/pid:
-$VANILLA = 0;
+our $VANILLA = 0;
 
-$MIME::Lite::DEBUG = 0;
+our $DEBUG = 0;
 
 #==============================
 #==============================
