@@ -1399,7 +1399,9 @@ sub fields {
         ### handle sub-attrs if available
         if (my $subs = $sub_attrs->{$tag}) {
             $value .= '; ' .
-              join('; ', map { qq{$_="$subs->{$_}"} } sort keys %$subs);
+              join('; ', map {
+                  /\*$/ ? qq[$_=$subs->{$_}] : qq[$_="$subs->{$_}"]
+              } sort keys %$subs);
         }
 
         # handle stripping \r\n now since we're not doing it in attr()
