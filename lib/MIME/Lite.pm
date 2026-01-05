@@ -429,7 +429,7 @@ my %KnownField = map { $_ => 1 }
   bcc         cc          comments      date          encrypted
   from        keywords    message-id    mime-version  organization
   received    references  reply-to      return-path   sender
-  subject     to
+  subject     to          in-reply-to
 
   approved
 );
