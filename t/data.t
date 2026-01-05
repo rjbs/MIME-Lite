@@ -1,4 +1,7 @@
 #!/usr/bin/perl
+use strict;
+use warnings;
+
 use lib "lib", "t";
 use MIME::Lite;
 use ExtUtils::TBone;
@@ -19,7 +22,6 @@ $me = MIME::Lite->build(Type => 'text/plain',
 			Data => "Hello\nWorld\n");
 $str = $me->as_string;
 $T->ok(($str =~ m{Hello\nWorld\n}),
-       $from,
        "Data string");
 
 #------------------------------
@@ -27,7 +29,6 @@ $me = MIME::Lite->build(Type => 'text/plain',
 			Data => ["Hel", "lo\n", "World\n"]);
 $str = $me->as_string;
 $T->ok(($str =~ m{Hello\nWorld\n}),
-       $from,
        "Data array 1");
 
 #------------------------------
@@ -35,7 +36,6 @@ $me = MIME::Lite->build(Type => 'text/plain',
 			Data => ["Hel", "lo", "\n", "", "World", "", "","\n"]);
 $str = $me->as_string;
 $T->ok(($str =~ m{Hello\nWorld\n}),
-       $from,
        "Data array 2");
 
 #------------------------------
@@ -43,13 +43,6 @@ $me = MIME::Lite->build(Type => 'text/plain',
 			Path => "./testin/hello");
 $str = $me->as_string;
 $T->ok(($str =~ m{Hello\r?\nWorld\r?\n}),
-       $from,
        "Data file");
 
-
 $T->end;
-
-
-
-
-
