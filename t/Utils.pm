@@ -1,14 +1,16 @@
 package Utils;
+use strict;
+use warnings;
 
-@ISA = qw(Exporter);
-@EXPORT = qw(slurp spew cmp);
+our @ISA = qw(Exporter);
+our @EXPORT = qw(slurp spew cmp);
 
-sub slurp { 
+sub slurp {
     my $path = shift;
     open IN, "<$path"; my $data = join('',<IN>); close IN; $data;
 }
 
-sub spew  { 
+sub spew {
     my ($path, $data) = @_;
     open OUT, ">$path"; print OUT $data; close OUT;
 }
