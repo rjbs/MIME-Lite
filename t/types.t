@@ -72,4 +72,3 @@ This isn't really html. We are only checking the filename silly.
 EOFEXPECT
 
 is($ret, $expect, "we got the message we expected");
-
