@@ -2432,9 +2432,43 @@ sub fields_as_string {
         next if ( $value eq '' );         ### skip empties
         $tag =~ s/\b([a-z])/uc($1)/ge;    ### make pretty
         $tag =~ s/^mime-/MIME-/i;         ### even prettier
+        if (length($value) > 72 && $value !~ /\n/) {
+            $value = fold_header($value);
+        }
         $out .= "$tag: $value\n";
     }
     return $out;
+}
+
+sub fold_header {
+    local $_ = shift;
+    my $Eol = shift || "\n";
+
+    # Undo any existing folding
+    s/\r?\n(\s)/$1/gms;
+
+    # Pulled partly from Mail::Message::Field
+    my $Folded = '';
+    while (1) {
+        if (length($_) < 72) {
+            $Folded .= $_;
+            last;
+        }
+        # Prefer breaking at ; or ,
+        s/^(.{18,72}[;,])([ \t])// ||
+        # Otherwise any space is fine
+        s/^(.{18,72})([ \t])// ||
+        # Hmmm, longer than 72 chars, find up to next whitespace
+        s/^(.{72,}?)([ \t])// ||
+        # Ok, better just get everything
+        s/^(.*)()//;
+        $Folded .= $1 . $Eol . $2;
+    }
+
+    # Strip the trailing eol
+    $Folded =~ s/${Eol}$//;
+
+    return $Folded;
 }
 
 #------------------------------
