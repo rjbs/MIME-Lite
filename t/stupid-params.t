@@ -1,4 +1,6 @@
+#!/usr/bin/perl
 use strict;
+use warnings;
 
 use MIME::Lite;
 use Test::More tests => 1;
