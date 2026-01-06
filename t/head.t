@@ -5,7 +5,6 @@ use warnings;
 use lib "lib", "t";
 use MIME::Lite;
 use Test::More;
-use Utils;
 
 # Make a tester... here are 3 different alternatives:
 $MIME::Lite::VANILLA  = 1;
