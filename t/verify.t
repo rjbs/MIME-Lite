@@ -5,7 +5,6 @@ use warnings;
 use lib "lib", "t";
 use MIME::Lite;
 use Test::More tests => 2;
-use Utils;
 
 $MIME::Lite::VANILLA  = 1;
 $MIME::Lite::PARANOID = 1;

@@ -5,7 +5,6 @@ use warnings;
 use lib "lib", "t";
 use MIME::Lite;
 use Test::More;
-use Utils;
 
 if (eval { require MIME::Types; MIME::Types->VERSION(1.28); 1 }) {
   plan tests => 1;
