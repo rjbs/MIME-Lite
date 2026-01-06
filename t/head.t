@@ -2,7 +2,6 @@
 use strict;
 use warnings;
 
-use lib "lib", "t";
 use MIME::Lite;
 use Test::More;
 
