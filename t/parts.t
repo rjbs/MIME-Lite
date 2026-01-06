@@ -4,16 +4,12 @@ use warnings;
 
 use lib "lib", "t";
 use MIME::Lite;
-use ExtUtils::TBone;
+use Test::More;
 use Utils;
 
 # Make a tester... here are 3 different alternatives:
-my $T = typical ExtUtils::TBone;                 # standard log
 $MIME::Lite::VANILLA  = 1;
 $MIME::Lite::PARANOID = 1;
-
-# Begin testing:
-$T->begin(2);
 
 my $msg;
 
@@ -24,12 +20,8 @@ my $part = $msg->attach(Data => "attachment 3");
 $part->attach(Data => "attachment 4");
 $part->attach(Data => "attachment 5");
 
-$T->msg("The message:\n".$msg->stringify);
+is($msg->parts, 4, "->parts count is correct");
 
-$T->ok_eqnum(int($msg->parts), 4,
-       "Does parts() work?");
+is($msg->parts_DFS, 7, "->parts_DFS count is correct");
 
-$T->ok_eqnum(int($msg->parts_DFS), 7,
-       "Does parts_DFS() work?");
-
-$T->end;
+done_testing;

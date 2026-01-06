@@ -13,7 +13,6 @@ examples/mime_longlines
 examples/mime_postcard
 examples/nodisp
 lib/MIME/Lite.pm
-t/ExtUtils/TBone.pm
 t/Utils.pm
 t/addrs.t
 t/data.t
