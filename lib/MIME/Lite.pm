@@ -557,7 +557,7 @@ if ( !$PARANOID and eval "require Mail::Address" ) {
 # Unless paranoid, we try to load the real code before supplying our own.
 
 if ( !$PARANOID and eval "require MIME::Base64" ) {
-    import MIME::Base64 qw(encode_base64);
+    MIME::Base64->import(qw(encode_base64));
     push @Uses, "B$MIME::Base64::VERSION";
 } else {
     eval q{
