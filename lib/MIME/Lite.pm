@@ -3,6 +3,8 @@ use 5.006;    ### for /c modifier in m/\G.../gc modifier
 use strict;
 use warnings;
 
+use File::Basename;
+
 =head1 NAME
 
 MIME::Lite - low-calorie MIME generator
@@ -422,17 +424,12 @@ my %KnownField = map { $_ => 1 }
 );
 
 ### What external packages do we use for encoding?
-my @Uses;
+my @Uses = (
+  "F" . File::Basename->VERSION,
+);
 
 ### Header order:
 my @FieldOrder;
-
-### See if we have File::Basename
-my $HaveFileBasename = 0;
-if ( eval "require File::Basename" ) {    # not affected by $PARANOID, core Perl
-    $HaveFileBasename = 1;
-    push @Uses, "F$File::Basename::VERSION";
-}
 
 ### See if we have/want MIME::Types
 my $HaveMimeTypes = 0;
@@ -1816,12 +1813,8 @@ sub path {
         if ( $self->{Path} and ( $self->{Path} !~ /\|$/ ) ) {    ### non-shell path:
             ( $filename = $self->{Path} ) =~ s/^<//;
 
-            ### Consult File::Basename, maybe:
-            if ($HaveFileBasename) {
-                $filename = File::Basename::basename($filename);
-            } else {
-                ($filename) = ( $filename =~ m{([^\/]+)\Z} );
-            }
+            ### Consult File::Basename
+            $filename = File::Basename::basename($filename);
         }
         $self->filename($filename);
 
