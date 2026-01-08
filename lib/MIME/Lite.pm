@@ -344,7 +344,7 @@ use Carp ();
 use FileHandle;
 
 # GLOBALS, EXTERNAL/CONFIGURATION...
-our $VERSION = '3.034';
+our $VERSION = '3.035';
 
 ### Automatically interpret CC/BCC for SMTP:
 our $AUTO_CC = 1;
