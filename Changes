@@ -1,0 +1,254 @@
+{{$NEXT}}
+        - converted to Dist::Zilla
+
+3.035     (unknown)
+        - No changes since previous version, just made non-trial.
+
+3.034     (unknown)  (TRIAL RELEASE)
+        - Add in-reply-to to known field list.
+        - Remove Date header when setting top_level off.
+        - Do not quote rfc2331-encoded parameters.
+        - Automatically fold headers, if needed.
+
+3.033     (unknown)
+        - No changes since previous version, just made non-trial.
+
+3.032     (unknown)
+        - Fix an error in printing to Net::SMTP (thanks, Peter Heirich)
+        - Add "use warnings" and require v5.6
+
+3.031     (unknown)
+        - Add an SSL option to connect to the SMTP relay via SSL on port 465.
+          (thanks, Max Maischein)
+        - Document some tips on using non-ASCII content with MIME::Lite
+          (thanks, traveljury.com and Tom Hukins)
+
+3.030     (unknown)
+        - Make send_by_sendmail set sender like documentation says it does
+          (thanks, Michael Schout!)
+
+3.029     (unknown)
+        - Allow the MIME-Version header to be replaced (thanks, Florian!)
+
+3.028     (unknown)
+        - Various documentation fixes
+
+3.027     (unknown)
+        - Add send_to_testfile method (Thanks, AlexanderBecker)
+
+3.026     (unknown)
+        - Fix tests to pass with MIME::Types 1.28
+
+3.025     (unknown)
+        - Added back support for providing a non-default SMTP port (#21156,
+          #48783, thanks John Bokma!).
+
+3.024     (unknown)
+        - add git repo link to metadata
+
+3.023     (unknown)
+        - Correct erroneous changelog entry
+        - Fix typo in perldoc: utf-8, not utf8
+
+3.022     (unknown)
+        - Behave on Cygwin as on Win32 with regard to defaulting to SMTP
+          sending.
+        - Respect crazy people who put multiple Cc or Bcc headers in message
+          (#30574, thanks Pavel V. Rochnyack!)
+        - We no longer rewrite array and hash refs in the send_by_sendmail args
+          so aggressively.
+        - Cope with missing local sendmail (thanks to Debian for patching for
+          this)
+        - Fix weird unicode-in-$1 bug (thanks SREZIC!)
+        - Other minor bug fixes.
+
+3.021     (unknown)
+        - Replace Email::Date with Email::Date::Format to limit prereqs
+          (Email::Date::Format produced just for this!)
+        - Begin the process of removing use of ExtUtils::TBone for testing
+
+3.020     (unknown)
+        - Optimized code for speedup of creation of two-part messages. The
+          internal structure of the object has changes, but that won't matter
+          if you were using the published interface. (Sam Tregar)
+        - Removed the "advanced features", ie auto-fallback delivery, from
+          send_by_smtp. They didn't belong there in the first place.
+
+3.01_06   2007-07-29
+        - First release from Perl Email Project. Updated packaging.
+
+3.01_04   2004-05-05
+        - Reworked the new send_by_smtp stuff. Documentation modifications.
+
+3.01_02   2003-08-28
+        - Fixed tests on Win32 due to line ending format change.
+        - Fixed email extraction for SMTP with or without Mail::Address.
+
+3.01_01   2003-04-25
+        - Test release with various fixes.
+        - Added support for funky names in the from field when sending via
+          SMTP.
+        - Win32 now defaults to using SMTP instead of sendmail.
+        - Fixed SMTP interaction bug with Net::CMD regarding "\n\n" endings.
+        - Content-Id now automatically gets angle brackets.
+        - Fixed sendmail path discovery.
+        - Fixed date stamp formatting.
+        - Fixed quoted-printable handling of weird \r\n combinations.
+
+3.01      2003-04-25
+        - Eryq has reappeared long enough to graciously hand over the
+          maintenance of the module. Thanks.
+
+3.00      2003-04-24
+        - Eryq has disappeared; taken over maintenance.
+        - This release has code that actually works with MIME::Lite now, as
+          well as a few other minor additions.
+
+2.117     2001-08-20
+        - The terms-of-use have been placed in the distribution file
+          "COPYING". Also, small documentation tweaks were made.
+
+2.116     2001-08-17
+        - Added long-overdue patch which makes the instance method form of
+          send() do the right thing when given HOW... arguments. (thanks,
+          Casey West)
+
+2.114     2001-08-16
+        - New special 'AUTO' content type in new()/build() tells MIME::Lite to
+          try and guess the type from file extension.
+        - File::Basename is used if it is available. (thanks, Ville Skytta)
+        - SMTP failures now add $smtp->message to the croak'ed exception.
+          (thanks, Thomas R. Wyant III)
+        - Subtle change to as_string for Perl 5.004_04 on NT 4. (thanks, John
+          Gotts)
+        - Added contrib directory, with MailTool.pm. (thanks, Tom Wyant)
+        - Improved HTML documentation.
+        - Corrected some mis-docs.
+
+2.111     2001-04-03
+        - Added long-overdue parts() and parts_DFS() methods.
+        - Added long-overdue auto-verify logic to print() method.
+        - Added long-overdue preamble() method. (thanks, Jim Daigle)
+
+2.108     2001-03-30
+        - New field_order() allows you to set the header order, both on a
+          per-message basis, and package-wide. (thanks, Thomas Stromberg)
+        - Added code to try and divine "sendmail" path more intelligently.
+          (thanks, Slaven Rezic)
+
+2.107     2001-03-27
+        - Fixed serious bug where tainted data with quoted-printable encoding
+          was causing infinite loops. (thanks, Stefan Sautter and Larry
+          Geralds)
+        - Fixed bugs where a non-local $_ was being modified. (thanks,
+          Maarten Koskamp)
+        - Fixed buglet in add() where all value references were being treated
+          as arrayrefs. (thanks, dLux)
+        - Added "Approved" as an acceptable header field for new(), as per
+          RFC1036. (thanks, Thomax)
+        - Small improvements to docs. (thanks, Sven Rassman and Roland Walter)
+
+2.106     2000-11-21
+        - Added Alpha version of scrub() to make it easy for people to
+          suppress the printing of unwanted MIME attributes.
+        - Headers with empty-strings for their values are no longer printed.
+
+2.105     2000-10-14
+        - Fixed regression-test failure related to \-quoting in autoloaded
+          code. (thanks, Scott Schwartz)
+
+2.104     2000-09-28
+        - Now attempts to load and use Mail::Address for parsing email
+          addresses before falling back to our own method.
+        - Added FromSender option to send_by_sendmail(). (thanks, Bill
+          Moseley)
+
+2.101     2000-06-06
+        - Major revision to print_body() and body_as_string() so that "body"
+          really means "the part after the header".
+        - Added support for attaching a part to a "message/rfc822".
+        - Now takes care not to include "Bcc:" in header when using
+          send_by_smtp. (thanks, Tatsuhiko Miyagawa)
+        - Improved efficiency of many stringifying operations.
+        - Cleaned up the "examples" directory.
+
+1.147     2000-06-02
+        - Fixed buglet where lack of Cc:/Bcc: was causing extract_addrs to
+          emit "undefined variable" warnings. (thanks, David Mitchell)
+
+1.146     2000-05-18
+        - Fixed bug in parsing of addresses.
+        - Added automatic inclusion of a UT "Date:" at top level. (thanks,
+          Andy Jacobs)
+
+1.145     2000-05-06
+        - Fixed bug in encode_7bit(): a lingering /e modifier was removed.
+          (thanks, Michael A. Chase)
+
+1.142     2000-05-02
+        - Added new, taint-safe invocation of "sendmail", one which also sets
+          up the -f option. (thanks, Jeremy Howard)
+
+1.140     2000-04-27
+        - Fixed bug in support for "To", "Cc", and "Bcc" in send_by_smtp():
+          multiple (comma-separated) addresses should now work fine. (thanks,
+          John Mason)
+        - Added automatic verification that attached data files exist.
+
+1.137     2000-03-22
+        - Added support for "Cc" and "Bcc" in send_by_smtp(). (thanks, Lucas
+          Maneos)
+        - Chooses a better default content-transfer-encoding if the
+          content-type is "image/*", "audio/*", etc.
+        - Fixed bug in QP-encoding where a non-local $_ was being modified.
+          (thanks, Jochen Stenzel)
+        - Removed references to $`, $', and $&.
+        - Added an example of how to send HTML files with enclosed in-line
+          images.
+
+1.133     1999-04-17
+        - Fixed bug in "Data" handling: arrayrefs were not being handled
+          properly.
+
+1.130     1998-12-14
+        - Added much larger and more-flexible send() facility. (thanks, Andrew
+          McRae and Optimation New Zealand Ltd)
+        - Added get() method for extracting basic attributes.
+        - New... "t" tests!
+
+1.124     1998-11-13
+        - Folded in filehandle (FH) support in build/attach. (thanks, Miko
+          O'Sullivan)
+
+1.122     1998-01-19
+        - MIME::Base64 and MIME::QuotedPrint are used if available.
+        - The 7bit encoding no longer does "escapes"; it merely strips 8-bit
+          characters.
+
+1.121     1997-04-08
+        - Filename attribute is now no longer ignored by build(). (thanks, Ian
+          Smith)
+
+1.120     1997-03-29
+        - Efficiency hack to speed up MIME::Lite::IO_Scalar. (thanks, David
+          Aspinwall)
+
+1.116     1997-03-19
+        - Small bug in our private copy of encode_base64() was patched.
+          (thanks, Andreas Koenig)
+        - New, prettier way of specifying mail message headers in build().
+        - New quiet method to turn off warnings.
+        - Changed "stringify" methods to more-standard "as_string" methods.
+
+1.112     1997-03-06
+        - Added read_now(), and binmode() method for non-Unix-using brethren.
+          (thanks, Xiangzhou Wang)
+
+1.110     1997-03-06
+        - Fixed bug in opening the data filehandle.
+
+1.102     1997-03-01
+        - Initial release.
+
+1.101     1997-03-01
+        - Baseline code. Originally created: 11 December 1996.

@@ -1,13 +1,10 @@
 package MIME::Lite;
-use 5.006;    ### for /c modifier in m/\G.../gc modifier
+# ABSTRACT: low-calorie MIME generator
+use v5.12.0;  ### for /c modifier in m/\G.../gc modifier
 use strict;
 use warnings;
 
 use File::Basename;
-
-=head1 NAME
-
-MIME::Lite - low-calorie MIME generator
 
 =head1 WAIT!
 
@@ -346,7 +343,6 @@ use Carp ();
 use FileHandle;
 
 # GLOBALS, EXTERNAL/CONFIGURATION...
-our $VERSION = '3.035';
 
 ### Automatically interpret CC/BCC for SMTP:
 our $AUTO_CC = 1;
@@ -1145,7 +1141,7 @@ sub top_level {
     if ($onoff) {
         $attrs->{'mime-version'} = '1.0';
         my $uses = ( @Uses ? ( "(" . join( "; ", @Uses ) . ")" ) : '' );
-        $self->replace( 'X-Mailer' => "MIME::Lite $VERSION $uses" )
+        $self->replace( 'X-Mailer' => "MIME::Lite $MIME::Lite::VERSION $uses" )
           unless $VANILLA;
     } else {
         delete $attrs->{'mime-version'};
