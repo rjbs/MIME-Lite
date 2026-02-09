@@ -1,7 +1,6 @@
 package MIME::Lite;
 # ABSTRACT: low-calorie MIME generator
-use v5.12.0;  ### for /c modifier in m/\G.../gc modifier
-use strict;
+use v5.12.0;
 use warnings;
 
 use File::Basename;
