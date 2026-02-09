@@ -6,6 +6,8 @@ use warnings;
 
 use File::Basename;
 
+=begin :prelude
+
 =head1 WAIT!
 
 MIME::Lite is not recommended by its current maintainer.  There are a number of
@@ -13,6 +15,8 @@ alternatives, like Email::MIME or MIME::Entity and Email::Sender, which you
 should probably use instead.  MIME::Lite continues to accrue weird bug reports,
 and it is not receiving a large amount of refactoring due to the availability
 of better alternatives.  Please consider using something else.
+
+=end :prelude
 
 =head1 SYNOPSIS
 
