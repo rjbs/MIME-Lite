@@ -1,2 +1,3 @@
-.build
-MIME-Lite-*
+/.build
+/.gitnxtver_cache
+/MIME-Lite-*
