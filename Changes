@@ -1,4 +1,7 @@
+Revision history for {{$dist->name}}
+
 {{$NEXT}}
+        - tweak prereq generation to install on ancient perls (5.12, 5.16)
 
 3.036     2026-02-09 09:46:19-05:00 America/New_York (TRIAL RELEASE)
         - converted to Dist::Zilla
