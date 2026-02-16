@@ -2,6 +2,9 @@ Revision history for {{$dist->name}}
 
 {{$NEXT}}
 
+3.038     2026-02-16 16:15:46-05:00 America/New_York
+        - fix metdata/doc errors introduced during conversion to Dist::Zilla
+
 3.037     2026-02-10 20:56:44-05:00 America/New_York
         - tweak prereq generation to install on ancient perls (5.12, 5.16)
 
