@@ -3669,40 +3669,6 @@ non-ASCII characters (e.g., Latin-1, Latin-2, or any other 8-bit alphabet).
 
 =cut
 
-
-=begin FOR_README_ONLY
-
-=head1 INSTALLATION
-
-Install using
-
-  perl makefile.pl
-  make test
-  make install
-
-Adjust the make command as is appropriate for your OS.
-'nmake' is the usual name under Win32
-
-In order to read the docmentation please use
-
-  perldoc MIME::Lite
-
-from the command line or visit
-
-  http://search.cpan.org/search?query=MIME%3A%3ALite&mode=all
-
-for a list of all MIME::Lite related materials including the
-documentation in HTML of all of the released versions of
-MIME::Lite.
-
-=cut
-
-
-=end FOR_README_ONLY
-
-=cut
-
-
 =head1 HELPER MODULES
 
 MIME::Lite works nicely with other certain other modules if they are present.
@@ -3750,32 +3716,6 @@ them unless they also have an associated test. This means that if I don't have
 the time to write the test the patch won't get applied, so please, include tests
 for any patches you provide.
 
-=head1 VERSION
-
-Version: 3.033
-
-=head1 CHANGE LOG
-
-Moved to ./changes.pod
-
-NOTE: Users of the "advanced features" of 3.01_0x smtp sending
-should take care: These features have been REMOVED as they never
-really fit the purpose of the module. Redundant SMTP delivery is
-a task that should be handled by another module.
-
-=head1 TERMS AND CONDITIONS
-
-  Copyright (c) 1997 by Eryq.
-  Copyright (c) 1998 by ZeeGee Software Inc.
-  Copyright (c) 2003,2005 Yves Orton. (demerphq)
-
-All rights reserved.  This program is free software; you can
-redistribute it and/or modify it under the same terms as Perl
-itself.
-
-This software comes with B<NO WARRANTY> of any kind.
-See the COPYING file in the distribution for details.
-
 =head1 NUTRITIONAL INFORMATION
 
 For some reason, the US FDA says that this is now required by law
@@ -3793,16 +3733,5 @@ Version 3.0 is now new and improved! The distribution is now 30% smaller!
 
 Warning: for consumption by hardware only!  May produce
 indigestion in humans if taken internally.
-
-=head1 AUTHOR
-
-Eryq (F<eryq@zeegee.com>).
-President, ZeeGee Software Inc. (F<http://www.zeegee.com>).
-
-Go to F<http://www.cpan.org> for the latest downloads
-and on-line documentation for this module.  Enjoy.
-
-Patches And Maintenance by Yves Orton and many others.
-Consult ./changes.pod
 
 =cut
