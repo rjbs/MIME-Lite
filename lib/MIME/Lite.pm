@@ -3332,7 +3332,7 @@ Text: "E<iquest>Quieres ganar muchos E<euro>'s?"
 
 
     use MIME::Lite;
-    use Encode qw(encode encode_utf8 );
+    use Encode qw(encode);
 
     my $to      = "Ram\363n Nu\361ez <foo\@bar.com>";
     my $subject = "\241Aqu\355 est\341!";
@@ -3343,7 +3343,7 @@ Text: "E<iquest>Quieres ganar muchos E<euro>'s?"
         From    => 'me@myhost.com',
         To      => encode( 'MIME-Header', $to ),
         Subject => encode( 'MIME-Header', $subject ),
-        Data    => encode_utf8($text)
+        Data    => encode( 'UTF-8', $text)
     );
     $msg->attr( 'content-type' => 'text/plain; charset=utf-8' );
     $msg->send;
