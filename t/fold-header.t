@@ -18,13 +18,14 @@ my $msg = MIME::Lite->new(
 
 my $header = $msg->header_as_string;
 $header =~ s/Date: .*/Date:/;
+$header =~ s/X-Mailer: MIME::Lite \K.*/~/;
 
 my $expected = <<TEXT;
 Content-Disposition: inline
 Content-Transfer-Encoding: 8bit
 Content-Type: text/plain
 MIME-Version: 1.0
-X-Mailer: MIME::Lite 3.035 (F2.86; T2.30; A2.22; B3.16_01; Q3.16_01)
+X-Mailer: MIME::Lite ~
 Date:
 From: me
 To: you
