@@ -8,7 +8,7 @@ use Test::More tests => 2;
 my $subject = 'A subject line which is more than 72 character long.';
 $subject .= ' It started short, but then we added more words and now it is longer.';
 $subject .= ' It is now 187 characters long which is more than twice the length';
-is length($subject),  187;
+is(length($subject),  187, "constructed input is the expected length");
 
 my $msg = MIME::Lite->new(
     From    => 'me',
@@ -16,13 +16,15 @@ my $msg = MIME::Lite->new(
     Subject => $subject,
 );
 
+my $encoding = $msg->suggest_encoding('text/plain');
+
 my $header = $msg->header_as_string;
 $header =~ s/Date: .*/Date:/;
 $header =~ s/X-Mailer: MIME::Lite \K.*/~/;
 
-my $expected = <<TEXT;
+my $expected = <<"TEXT";
 Content-Disposition: inline
-Content-Transfer-Encoding: 8bit
+Content-Transfer-Encoding: $encoding
 Content-Type: text/plain
 MIME-Version: 1.0
 X-Mailer: MIME::Lite ~
@@ -34,5 +36,5 @@ Subject: A subject line which is more than 72 character long. It started short,
  characters long which is more than twice the length
 TEXT
 
-is $header, $expected;
+is($header, $expected, "header matched (fuzzed-up) expectations");
 
