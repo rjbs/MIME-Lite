@@ -1144,7 +1144,8 @@ sub top_level {
     if ($onoff) {
         $attrs->{'mime-version'} = '1.0';
         my $uses = ( @Uses ? ( "(" . join( "; ", @Uses ) . ")" ) : '' );
-        $self->replace( 'X-Mailer' => "MIME::Lite $MIME::Lite::VERSION $uses" )
+        my $version = MIME::Lite->VERSION // 'vDEV';
+        $self->replace( 'X-Mailer' => "MIME::Lite $version $uses" )
           unless $VANILLA;
     } else {
         delete $attrs->{'mime-version'};
